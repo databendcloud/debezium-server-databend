@@ -1,0 +1,4 @@
+io/debezium/server/databend/batchsizewait/InterfaceBatchSizeWait.class
+io/debezium/server/databend/DebeziumMetrics.class
+io/debezium/server/databend/batchsizewait/NoBatchSizeWait.class
+io/debezium/server/databend/batchsizewait/MaxBatchSizeWait.class
