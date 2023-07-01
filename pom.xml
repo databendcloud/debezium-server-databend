@@ -14,6 +14,14 @@
     <groupId>io.debezium</groupId>
     <artifactId>debezium-server-databend</artifactId>
     <name>Debezium Server Parent</name>
+    <dependencies>
+        <dependency>
+            <groupId>io.debezium</groupId>
+            <artifactId>debezium-api</artifactId>
+            <version>1.9.7.Final</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
     <version>${revision}</version>
     <packaging>pom</packaging>
 
