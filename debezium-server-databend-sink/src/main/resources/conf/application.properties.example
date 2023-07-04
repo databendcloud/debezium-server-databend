@@ -26,7 +26,6 @@ debezium.format.key=json
 
 # mysql source
 debezium.source.connector.class=io.debezium.connector.mysql.MySqlConnector
-debezium.source.offset.storage=org.apache.kafka.connect.storage.FileOffsetBackingStore
 debezium.source.offset.storage.file.filename=data/offsets.dat
 debezium.source.offset.flush.interval.ms=60000
 
