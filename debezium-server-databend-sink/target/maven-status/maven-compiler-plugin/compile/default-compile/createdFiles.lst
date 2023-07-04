@@ -1,0 +1,17 @@
+io/debezium/server/databend/tablewriter/UpsertTableWriter.class
+io/debezium/server/databend/DatabendChangeEvent$2.class
+io/debezium/server/databend/batchsizewait/NoBatchSizeWait.class
+io/debezium/server/databend/batchsizewait/MaxBatchSizeWait.class
+io/debezium/server/databend/DatabendChangeEvent$Schema.class
+io/debezium/server/databend/tablewriter/AppendTableWriter.class
+io/debezium/server/databend/batchsizewait/InterfaceBatchSizeWait.class
+io/debezium/server/databend/DatabendChangeEvent.class
+io/debezium/server/databend/DatabendUtil.class
+io/debezium/server/databend/DatabendChangeConsumer.class
+io/debezium/server/databend/DatabendTypes.class
+io/debezium/server/databend/tablewriter/TableWriterFactory.class
+io/debezium/server/databend/DebeziumMetrics.class
+io/debezium/server/databend/DatabendChangeEvent$1.class
+io/debezium/server/databend/tablewriter/RelationalTable.class
+io/debezium/server/databend/tablewriter/BaseTableWriter.class
+io/debezium/server/databend/tablewriter/TableNotFoundException.class

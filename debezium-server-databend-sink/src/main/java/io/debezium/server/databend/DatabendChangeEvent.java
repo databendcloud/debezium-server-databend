@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright memiiso Authors.
+ *  * Copyright Databend Authors.
  *  *
  *  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -16,7 +16,6 @@ import com.databend.client.data.DatabendRawType;
 import com.databend.jdbc.DatabendColumnInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.jdbi.v3.core.qualifier.QualifiedType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

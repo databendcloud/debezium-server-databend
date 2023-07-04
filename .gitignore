@@ -1,6 +1,9 @@
 # Compiled class file
 .idea
 *.class
+*debezium-server-databend-sink/target
+*debezium-server-databend-dist/target
+*/target/*
 
 # Log file
 *.log

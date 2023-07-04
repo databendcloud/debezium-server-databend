@@ -2,7 +2,7 @@
 debezium.sink.type=databend
 debezium.sink.databend.upsert=false
 debezium.sink.databend.upsert-keep-deletes=true
-debezium.sink.databend.database.schema=debezium
+debezium.sink.databend.database.databaseName=debezium
 debezium.sink.databend.table-prefix=debeziumcdc_
 debezium.sink.databend.database.host=host
 debezium.sink.databend.database.port=port
@@ -26,7 +26,6 @@ debezium.format.key=json
 
 # mysql source
 debezium.source.connector.class=io.debezium.connector.mysql.MySqlConnector
-debezium.source.offset.storage=org.apache.kafka.connect.storage.FileOffsetBackingStore
 debezium.source.offset.storage.file.filename=data/offsets.dat
 debezium.source.offset.flush.interval.ms=60000
 

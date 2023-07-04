@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright memiiso Authors.
+ *  * Copyright Databend Authors.
  *  *
  *  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -15,7 +15,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jdbi.v3.core.statement.PreparedBatch;
+import org.jooq.meta.derby.sys.Sys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +34,10 @@ public abstract class BaseTableWriter {
         final String sql = table.preparedInsertStatement(this.identifierQuoteCharacter);
         try {
             Statement stmt = connection.prepareStatement(sql);
-        }catch (Exception e) {
-
+        } catch (Exception e) {
         }
+        System.out.println("the debezium event is:");
+        System.out.println(events);
 
 //        int inserts = jdbi.withHandle(handle -> {
 //            PreparedBatch b = handle.prepareBatch(sql);

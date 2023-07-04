@@ -1,11 +1,14 @@
-/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/DatabendChangeConsumer.java
 /Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/batchsizewait/MaxBatchSizeWait.java
 /Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/tablewriter/TableWriterFactory.java
-/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/tablewriter/TableNotFoundException.java
+/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/DatabendTypes.java
 /Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/tablewriter/BaseTableWriter.java
 /Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/DatabendChangeEvent.java
+/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/tablewriter/AppendTableWriter.java
+/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/DebeziumMetrics.java
+/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/DatabendChangeConsumer.java
+/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/tablewriter/TableNotFoundException.java
 /Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/DatabendUtil.java
 /Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/batchsizewait/InterfaceBatchSizeWait.java
 /Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/tablewriter/RelationalTable.java
 /Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/batchsizewait/NoBatchSizeWait.java
-/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/DebeziumMetrics.java
+/Users/hanshanjie/git-works/debezium-server-databend/debezium-server-databend-sink/src/main/java/io/debezium/server/databend/tablewriter/UpsertTableWriter.java

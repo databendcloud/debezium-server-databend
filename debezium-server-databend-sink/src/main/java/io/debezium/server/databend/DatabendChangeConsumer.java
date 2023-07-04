@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright memiiso Authors.
+ *  * Copyright Databend Authors.
  *  *
  *  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -15,8 +15,6 @@ import io.debezium.engine.format.Json;
 import io.debezium.serde.DebeziumSerdes;
 import io.debezium.server.BaseChangeConsumer;
 import io.debezium.server.databend.batchsizewait.InterfaceBatchSizeWait;
-//import io.debezium.server.jdbc.jdbi.ArrayListCodec;
-//import io.debezium.server.jdbc.jdbi.LinkedHashMapCodec;
 import io.debezium.server.databend.tablewriter.BaseTableWriter;
 import io.debezium.server.databend.tablewriter.RelationalTable;
 import io.debezium.server.databend.tablewriter.TableNotFoundException;
@@ -48,15 +46,11 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.core.codec.CodecFactory;
-import org.jdbi.v3.core.qualifier.QualifiedType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of the consumer that delivers the messages to jdbc database tables.
+ * Implementation of the consumer that delivers the messages to databend database tables.
  *
  * @author Ismail Simsek
  */
@@ -75,16 +69,16 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     protected long consumerStart = clock.currentTimeInMillis();
     protected long numConsumedEvents = 0;
     protected Threads.Timer logTimer = Threads.timer(clock, LOG_INTERVAL);
-    @ConfigProperty(name = "debezium.sink.jdbc.destination-regexp", defaultValue = "")
+    @ConfigProperty(name = "debezium.sink.databend.destination-regexp", defaultValue = "")
     protected Optional<String> destinationRegexp;
-    @ConfigProperty(name = "debezium.sink.jdbc.destination-regexp-replace", defaultValue = "")
+    @ConfigProperty(name = "debezium.sink.databend.destination-regexp-replace", defaultValue = "")
     protected Optional<String> destinationRegexpReplace;
     @ConfigProperty(name = "debezium.format.value", defaultValue = "json")
     String valueFormat;
     @ConfigProperty(name = "debezium.format.key", defaultValue = "json")
     String keyFormat;
-    public Jdbi jdbi;
-    @ConfigProperty(name = "debezium.sink.jdbc.table-prefix", defaultValue = "")
+    public Connection connection;
+    @ConfigProperty(name = "debezium.sink.databend.table-prefix", defaultValue = "")
     String tablePrefix;
     @ConfigProperty(name = "debezium.sink.batch.batch-size-wait", defaultValue = "NoBatchSizeWait")
     String batchSizeWaitName;
@@ -97,16 +91,18 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     @Inject
     TableWriterFactory tableWriterFactory;
     BaseTableWriter tableWriter;
-    @ConfigProperty(name = "debezium.sink.jdbc.database.schema", defaultValue = "debezium")
-    String targetSchema;
-    @ConfigProperty(name = "debezium.sink.jdbc.database.url")
+    @ConfigProperty(name = "debezium.sink.databend.database.databaseName", defaultValue = "debezium")
+    String databaseName;
+    @ConfigProperty(name = "debezium.sink.databend.database.primaryKey", defaultValue = "id")
+    String primaryKey;
+    @ConfigProperty(name = "debezium.sink.databend.database.url")
     String url;
-    @ConfigProperty(name = "debezium.sink.jdbc.database.username")
+    @ConfigProperty(name = "debezium.sink.databend.database.username")
     String username;
-    @ConfigProperty(name = "debezium.sink.jdbc.database.password")
+    @ConfigProperty(name = "debezium.sink.databend.database.password")
     String password;
 
-    @ConfigProperty(name = "debezium.sink.jdbc.upsert", defaultValue = "true")
+    @ConfigProperty(name = "debezium.sink.databend.upsert", defaultValue = "true")
     boolean upsert;
 
     public Connection createConnection(BasicDataSource dataSource, Properties properties) throws SQLException {
@@ -127,26 +123,21 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
         batchSizeWait.initizalize();
 
         Properties properties = new Properties();
-        Map<String, String> conf = DatabendUtil.getConfigSubset(ConfigProvider.getConfig(), "debezium.sink.jdbc.database" +
+        Map<String, String> conf = DatabendUtil.getConfigSubset(ConfigProvider.getConfig(), "debezium.sink.databend.database" +
                 ".param.");
         properties.putAll(conf);
-        LOGGER.trace("Jdbc Properties: {}", properties);
-        LOGGER.trace("Jdbc url {}", url);
-        LOGGER.trace("Jdbc username {}", username);
+        LOGGER.trace("Databend Properties: {}", properties);
+        LOGGER.trace("Databend url {}", url);
+        LOGGER.trace("Databend username {}", username);
         BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(properties);
         dataSource.setUrl(url);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         properties.setProperty("username", username);
         properties.setProperty("password", password);
+        connection = createConnection(dataSource, properties);
 
-//        jdbi = Jdbi.create(dataSource);
-//        jdbi.registerCodecFactory(
-//                CodecFactory.forSingleCodec(QualifiedType.of(LinkedHashMap.class), new LinkedHashMapCodec()));
-//        jdbi.registerCodecFactory(
-//                CodecFactory.forSingleCodec(QualifiedType.of(ArrayList.class), new ArrayListCodec()));
-
-        tableWriter = tableWriterFactory.get(createConnection(dataSource, properties));
+        tableWriter = tableWriterFactory.get(connection);
 
         // configure and set
         valSerde.configure(Collections.emptyMap(), false);
@@ -159,9 +150,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     public RelationalTable getDatabendTable(String tableName, DatabendChangeEvent.Schema schema) throws DebeziumException {
         RelationalTable t;
         try {
-            try (Handle handle = jdbi.open()) {
-                t = new RelationalTable(targetSchema, tableName, handle.getConnection());
-            }
+            t = new RelationalTable(primaryKey, databaseName, tableName, connection);
         } catch (TableNotFoundException e) {
             //t = createTable;
             if (!eventSchemaEnabled) {
@@ -169,14 +158,10 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
                         " true to create tables automatically!");
             }
             // create table
-            try (Handle handle = jdbi.open()) {
-                LOGGER.debug("Target table not found creating it!");
-                DatabendUtil.createTable(targetSchema, tableName, handle.getConnection(), schema, upsert);
-            }
+            LOGGER.debug("Target table not found creating it!");
+            DatabendUtil.createTable(databaseName, tableName, connection, schema, upsert);
             // get table after reading it
-            try (Handle handle = jdbi.open()) {
-                t = new RelationalTable(targetSchema, tableName, handle.getConnection());
-            }
+            t = new RelationalTable(primaryKey, databaseName, tableName, connection);
         }
 
         return t;

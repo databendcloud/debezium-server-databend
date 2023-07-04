@@ -9,7 +9,7 @@
 package io.debezium.server.databend.batchsizewait;
 
 /**
- * Implementation of the consumer that delivers the messages to jdbc database tables.
+ * Implementation of the consumer that delivers the messages to Databend database tables.
  *
  * @author hantmac
  */
