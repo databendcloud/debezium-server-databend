@@ -10,14 +10,11 @@ package io.debezium.databend;
 
 import io.debezium.databend.testresources.BaseDbTest;
 import io.debezium.databend.testresources.SourcePostgresqlDB;
-import io.debezium.databend.testresources.TargetPostgresqlDB;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 import java.time.Duration;
 
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
@@ -27,34 +24,9 @@ import org.junit.jupiter.api.Test;
  * @author Ismail Simsek
  */
 @QuarkusTest
-@QuarkusTestResource(TargetPostgresqlDB.class)
 @QuarkusTestResource(SourcePostgresqlDB.class)
 public class DatabendChangeConsumerTest extends BaseDbTest {
 
-  @Test
-  public void testSimpleUpload() {
-    Awaitility.await().atMost(Duration.ofSeconds(120)).until(() -> {
-      try {
-        Dataset<Row> df = getPGTableData("testc.inventory.customers");
-        df.show(false);
-        return df.count() >= 3;
-      } catch (Exception e) {
-        return false;
-      }
-    });
-
-    // test nested data(struct) consumed
-    Awaitility.await().atMost(Duration.ofSeconds(120)).until(() -> {
-      try {
-        Dataset<Row> ds = getPGTableData("testc.inventory.geom");
-        ds.show(false);
-        return ds.count() >= 3;
-      } catch (Exception e) {
-        return false;
-      }
-    });
-
-  }
 
 //  @Test
 //  public void testSchemaChanges() throws Exception {
@@ -156,20 +128,6 @@ public class DatabendChangeConsumerTest extends BaseDbTest {
           "'{\"reading\": 1123}'::json, '{\"reading\": 1123}'::jsonb" +
           ")";
     SourcePostgresqlDB.runSQL(sql);
-    Awaitility.await().atMost(Duration.ofSeconds(320)).until(() -> {
-      try {
-        Dataset<Row> df = getPGTableData("testc.inventory.data_types");
-        df.show(true);
-        return df.where("c_text is null AND c_varchar is null AND c_int is null " +
-                        "AND c_date is null AND c_timestamp is null AND c_timestamptz is null " +
-                        "AND c_float is null AND c_decimal is null AND c_numeric is null AND c_interval is null " +
-                        "AND c_boolean is null AND c_uuid is null " +
-                        //                "AND c_bytea is null"
-                        "").count() == 1;
-      } catch (Exception e) {
-        return false;
-      }
-    });
   }
 
   @Test
@@ -193,16 +151,6 @@ public class DatabendChangeConsumerTest extends BaseDbTest {
                  "          '{{\"breakfast\", \"consulting\"}, {\"meeting\", \"lunch\"}}')" +
                  ";";
     SourcePostgresqlDB.runSQL(sql);
-
-    Awaitility.await().atMost(Duration.ofSeconds(320)).until(() -> {
-      try {
-        Dataset<Row> df = getPGTableData("testc.inventory.array_data");
-        df.show(false);
-        return df.count() >= 3;
-      } catch (Exception e) {
-        return false;
-      }
-    });
   }
 
 

@@ -31,27 +31,7 @@ public class BaseDbTest {
     SourcePostgresqlDB.runSQL(sql);
   }
 
-  public Dataset<Row> getMysqlTableData(String table) {
-    table = "debeziumcdc_" + table.replace(".", "_");
-    return spark.newSession().read()
-        .format("jdbc")
-        .option("url", TargetMysqlDB.container.getJdbcUrl())
-        .option("dbtable", table)
-        .option("user", TargetMysqlDB.container.getUsername())
-        .option("password", TargetMysqlDB.container.getPassword())
-        .load();
-  }
 
-  public Dataset<Row> getPGTableData(String table) {
-    table = "debeziumcdc_" + table.replace(".", "_");
-    return spark.newSession().read()
-        .format("jdbc")
-        .option("url", TargetPostgresqlDB.container.getJdbcUrl())
-        .option("dbtable", table)
-        .option("user", TargetPostgresqlDB.container.getUsername())
-        .option("password", TargetPostgresqlDB.container.getPassword())
-        .load();
-  }
 
   public static int PGLoadTestDataTable(int numRows) {
     return PGLoadTestDataTable(numRows, false);

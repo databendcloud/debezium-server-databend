@@ -105,7 +105,8 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     @ConfigProperty(name = "debezium.sink.databend.upsert", defaultValue = "true")
     boolean upsert;
 
-    public Connection createConnection(BasicDataSource dataSource, Properties properties) throws SQLException {
+    public Connection createConnection(BasicDataSource dataSource, Properties properties) throws SQLException, ClassNotFoundException {
+        Class.forName("com.databend.jdbc.DatabendDriver");
         String url = dataSource.getUrl();
         return DriverManager.getConnection(url, properties);
     }

@@ -9,6 +9,7 @@
 package io.debezium.server.databend.tablewriter;
 
 import com.databend.client.data.DatabendRawType;
+import com.databend.jdbc.DatabendDatabaseMetaData;
 import io.debezium.DebeziumException;
 
 import java.sql.*;
@@ -35,10 +36,10 @@ public class RelationalTable {
 
         try {
             DatabaseMetaData meta = conn.getMetaData();
-            try (ResultSet tables = meta.getTables(null, this.databaseName, this.tableName, new String[]{"TABLE"})) {
+            try (ResultSet tables = meta.getColumns(null, this.databaseName, this.tableName, null)) {
 
                 int numTablesFound = 0;
-                while (tables != null && tables.next()) {
+                if (tables != null && tables.next()) {
                     numTablesFound++;
                     String catalog = tables.getString("TABLE_CAT");
                     String schema = tables.getString("TABLE_SCHEM");
@@ -63,10 +64,6 @@ public class RelationalTable {
 
                 if (numTablesFound == 0) {
                     throw new TableNotFoundException(String.format("RelationalTable %s.%s not found", databaseName, tableName));
-                }
-
-                if (numTablesFound > 1) {
-                    throw new DebeziumException(String.format("Found %s tables expecting 1", numTablesFound));
                 }
             }
 

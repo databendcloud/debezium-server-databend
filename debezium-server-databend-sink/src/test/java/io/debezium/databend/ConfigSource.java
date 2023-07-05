@@ -19,6 +19,9 @@ public class ConfigSource extends TestConfigSource {
         // sink conf
         config.put("debezium.sink.type", "databend");
         config.put("debezium.sink.databend.upsert", "false");
+        config.put("debezium.sink.databend.database.url","jdbc:databend://localhost:8000");
+        config.put("debezium.sink.databend.database.password","databend");
+        config.put("debezium.sink.databend.database.username","databend");
         config.put("debezium.sink.databend.upsert-keep-deletes", "true");
         config.put("debezium.sink.databend.database.databaseName", TARGET_SCHEMA);
         config.put("debezium.sink.databend.table-prefix", "debeziumcdc_");
