@@ -106,7 +106,6 @@ public class DatabendChangeConsumerTest extends BaseDbTest {
                  "            c_interval INTERVAL,\n" +
                  "            c_boolean BOOLEAN,\n" +
                  "            c_uuid UUID,\n" +
-                 //"            c_bytea BYTEA,\n" +
                  "            c_json JSON,\n" +
                  "            c_jsonb JSONB\n" +
                  "          );";
@@ -115,16 +114,13 @@ public class DatabendChangeConsumerTest extends BaseDbTest {
           "c_id, " +
           "c_text, c_varchar, c_int, c_date, c_timestamp, c_timestamptz, " +
           "c_float, c_decimal,c_numeric,c_interval,c_boolean,c_uuid," +
-          //"c_bytea,  " +
           "c_json, c_jsonb) " +
           "VALUES (1, null, null, null,null,null,null," +
           "null,null,null,null,null,null," +
-          //"null," +
           "null,null)," +
           "(2, 'val_text', 'A', 123, current_date , current_timestamp, current_timestamp," +
           "'1.23'::float,'1234566.34456'::decimal,'345672123.452'::numeric, interval '1 day',false," +
           "'3f207ac6-5dba-11eb-ae93-0242ac130002'::UUID," +
-          //" 'aBC'::bytea," +
           "'{\"reading\": 1123}'::json, '{\"reading\": 1123}'::jsonb" +
           ")";
     SourcePostgresqlDB.runSQL(sql);

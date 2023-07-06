@@ -18,7 +18,7 @@ public class ConfigSource extends TestConfigSource {
         config.put("quarkus.profile", "postgresql");
         // sink conf
         config.put("debezium.sink.type", "databend");
-        config.put("debezium.sink.databend.upsert", "false");
+        config.put("debezium.sink.databend.upsert", "true");
         config.put("debezium.sink.databend.database.url","jdbc:databend://localhost:8000");
         config.put("debezium.sink.databend.database.password","databend");
         config.put("debezium.sink.databend.database.username","databend");

@@ -119,7 +119,6 @@ class RelationalTableTest {
                 "VALUES (?, ?, ?, ?, ?)";
         RelationalTable tbl_without_pk = new RelationalTable("", "public", "tbl_without_pk", connection);
         RelationalTable tbl_with_pk = new RelationalTable("id", "public", "tbl_with_pk", connection);
-        System.out.println("sjh");
         System.out.println(tbl_with_pk.preparedInsertStatement(""));
         Assert.assertEquals(withPK, tbl_with_pk.preparedInsertStatement(""));
         Assert.assertEquals(withoutPK, tbl_without_pk.preparedInsertStatement("\""));
