@@ -31,3 +31,4 @@
 #
 
 io.debezium.databend.ConfigSource
+io.debezium.databend.DatabendConfigSource

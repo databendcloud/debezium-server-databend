@@ -15,6 +15,7 @@ import org.eclipse.microprofile.config.Config;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
+import org.jooq.meta.derby.sys.Sys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +75,7 @@ public class DatabendUtil {
                 case "array":
                     JsonNode items = jsonSchemaFieldNode.get("items");
                     if (items != null && items.has("type")) {
-                        fields.put(fieldName, SQLDataType.LONGNVARCHAR);
+                        fields.put(fieldName, SQLDataType.VARCHAR);
 //              String listItemType = items.get("type").textValue();
 //
 //              if (listItemType.equals("struct") || listItemType.equals("array") || listItemType.equals("map")) {
@@ -87,13 +88,13 @@ public class DatabendUtil {
                     }
                     break;
                 case "map":
-                    fields.put(fieldName, SQLDataType.LONGNVARCHAR);
+                    fields.put(fieldName, SQLDataType.VARCHAR);
                     //fields.put(fieldName, QualifiedType.of(Map.class));
                     //throw new RuntimeException("'" + fieldName + "' has Map type, Map type not supported!");
                     break;
                 case "struct":
                     // create it as struct, nested type
-                    fields.put(fieldName, SQLDataType.LONGNVARCHAR);
+                    fields.put(fieldName, SQLDataType.VARCHAR);
                     //Map<String, QualifiedType<?>> subSchema = fields(jsonSchemaFieldNode, fieldName, columnId);
                     //fields.put(fieldName, subSchema);
                     break;
@@ -123,14 +124,12 @@ public class DatabendUtil {
             case "boolean":
                 return SQLDataType.BOOLEAN;
             case "string":
-                return SQLDataType.LONGNVARCHAR;
-            case "uuid":
-                return SQLDataType.LONGNVARCHAR;
+                return SQLDataType.VARCHAR;
             case "bytes":
                 return SQLDataType.BINARY;
             default:
                 // default to String type
-                return SQLDataType.LONGNVARCHAR;
+                return SQLDataType.VARCHAR;
             //throw new RuntimeException("'" + fieldName + "' has "+fieldType+" type, "+fieldType+" not supported!");
         }
     }
@@ -143,22 +142,24 @@ public class DatabendUtil {
         List<Field<?>> fields = new ArrayList<>();
 
         fl.forEach((k, v) -> fields.add(DSL.field(DSL.name(k), v)));
-        create.setSchema(schemaName);
-
-        if (upsert && schema.keySchema() != null) {
-            try (CreateTableConstraintStep sql = create.createTable(tableName)
-                    .columns(fields)
-                    .primaryKey(schema.keySchemaFields().keySet().toArray(new String[0]))) {
-                LOGGER.warn("Creating table:\n{}", sql.getSQL());
-                sql.execute();
-            }
-        } else {
-            try (CreateTableColumnStep sql = create.createTable(tableName)
-                    .columns(fields)) {
-                LOGGER.warn("Creating table:\n{}", sql.getSQL());
-                sql.execute();
-            }
+        try (CreateTableConstraintStep sql = create.createTable(tableName)
+                .columns(fields)) {
+            String createTableSQL = createTableSQL(schemaName, sql.getSQL());
+            LOGGER.warn("Creating table:\n{}", createTableSQL);
+            conn.createStatement().execute(createTableSQL);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
+
+    }
+
+    private static String createTableSQL(String schemaName, String originalSQL) {
+        //"CREATE TABLE debeziumcdc_customers_append (__deleted boolean, id bigint, first_name varchar, __op varchar, __source_ts_ms bigint);";
+        String[] parts = originalSQL.split("\\s", 4);
+        parts[2] = schemaName + "." + parts[2];
+
+        String modifiedSQL = String.join(" ", parts);
+        return modifiedSQL;
     }
 
 }

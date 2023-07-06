@@ -9,7 +9,6 @@
 package io.debezium.server.databend.tablewriter;
 
 import com.databend.client.data.DatabendRawType;
-import com.databend.jdbc.DatabendDatabaseMetaData;
 import io.debezium.DebeziumException;
 
 import java.sql.*;
@@ -28,11 +27,13 @@ public class RelationalTable {
     private final String databaseName;
     public final Map<String, DatabendRawType> columns = new HashMap<>();
     public final Map<String, Integer> primaryKeysMap = new HashMap<>();
+    public final String primaryKey;
 
 
     public RelationalTable(String primaryKey, String databaseName, String tableName, Connection conn) throws DebeziumException {
         this.databaseName = databaseName;
         this.tableName = tableName;
+        this.primaryKey = primaryKey;
 
         try {
             DatabaseMetaData meta = conn.getMetaData();
@@ -49,7 +50,6 @@ public class RelationalTable {
                     try (ResultSet tColumns = meta.getColumns(catalog, schema, tableName, null)) {
                         while (tColumns.next()) {
                             String columnName = tColumns.getString("COLUMN_NAME");
-                            System.out.println(columnName);
                             DatabendRawType databendRawType = new DatabendRawType(columnName);
                             columns.put(columnName, databendRawType);
                         }
@@ -80,9 +80,20 @@ public class RelationalTable {
         return String.format("%s.%s", databaseName, tableName);
     }
 
-    public String preparedInsertStatement(String identifierQuoteCharacter) {
+    public String preparedUpsertStatement(String identifierQuoteCharacter) {
         StringBuilder sql = new StringBuilder();
-        sql.append(String.format("REPLACE INTO %s%s%s.%s%s%s \n", identifierQuoteCharacter, databaseName, identifierQuoteCharacter, identifierQuoteCharacter, tableName, identifierQuoteCharacter));
+        sql.append(String.format("REPLACE INTO %s%s%s.%s%s%s on(%s%s%s)\n", identifierQuoteCharacter, databaseName, identifierQuoteCharacter, identifierQuoteCharacter, tableName, identifierQuoteCharacter, identifierQuoteCharacter, primaryKey, identifierQuoteCharacter));
+        Set<String> fields = this.columns.keySet();
+//        sql.append(String.format("(%s) \n", fields.stream().map(f -> String.format("%s%s%s ", identifierQuoteCharacter, f, identifierQuoteCharacter)).collect(Collectors.joining(", "))));
+
+        sql.append(String.format("VALUES (%s)\n", fields.stream().map(f -> "?").collect(Collectors.joining(", "))));
+
+        return sql.toString().trim();
+    }
+
+    public String prepareInsertStatement(String identifierQuoteCharacter) {
+        StringBuilder sql = new StringBuilder();
+        sql.append(String.format("INSERT INTO %s%s%s.%s%s%s \n", identifierQuoteCharacter, databaseName, identifierQuoteCharacter, identifierQuoteCharacter, tableName, identifierQuoteCharacter));
         Set<String> fields = this.columns.keySet();
 //        sql.append(String.format("(%s) \n", fields.stream().map(f -> String.format("%s%s%s ", identifierQuoteCharacter, f, identifierQuoteCharacter)).collect(Collectors.joining(", "))));
 

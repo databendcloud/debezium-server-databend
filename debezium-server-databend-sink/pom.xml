@@ -166,6 +166,11 @@
             <version>${version.debezium}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-devtools</artifactId>
+            <version>1.13.7.Final</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

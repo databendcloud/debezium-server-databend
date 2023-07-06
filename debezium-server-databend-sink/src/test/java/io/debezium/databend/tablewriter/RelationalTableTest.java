@@ -8,7 +8,6 @@
 
 package io.debezium.databend.tablewriter;
 
-import com.databend.jdbc.DatabendDatabaseMetaData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.debezium.DebeziumException;
 
@@ -22,10 +21,7 @@ import io.debezium.server.databend.tablewriter.RelationalTable;
 
 import static io.debezium.server.databend.DatabendChangeConsumer.mapper;
 
-import org.jooq.meta.derby.sys.Sys;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -36,16 +32,9 @@ class RelationalTableTest {
     static void beforeAll() throws Exception {
         // CREATE TES TABLE USING JOOQ
         TargetDatabendDB targetDatabendDB = new TargetDatabendDB();
+        targetDatabendDB.start();
 
         connection = targetDatabendDB.createConnection();
-        DatabaseMetaData meta = connection.getMetaData();
-        try (ResultSet tables = meta.getColumns(null, "public", "tbl_without_pk", null)) {
-            System.out.println("ttt");
-            System.out.println(tables.next());
-            System.out.println(tables.getString("TABLE_NAME"));
-        } catch (Exception e) {
-
-        }
         connection.createStatement().execute("CREATE DATABASE if not exists " + targetDatabendDB.DB_DATABASE);
 
         String createTableWithPkSql = "CREATE TABLE IF NOT EXISTS " + targetDatabendDB.DB_DATABASE + ".tbl_with_pk (id BIGINT,coll1 VARCHAR, coll2 INT, coll3 FLOAT, coll4 INT);";
@@ -74,7 +63,6 @@ class RelationalTableTest {
             statement.setFloat(4, 1);
             statement.setInt(5, 1);
             statement.addBatch();
-            System.out.println("execute batch insert");
             int[] ans = statement.executeBatch();
 
             System.out.println("Rows inserted=" + Arrays.stream(ans).sum());
@@ -113,15 +101,15 @@ class RelationalTableTest {
 
     @Test
     void preparedInsertStatement() {
-        String withPK = "REPLACE INTO public.tbl_with_pk \n" +
+        String withPK = "REPLACE INTO public.tbl_with_pk on(id)\n" +
                 "VALUES (?, ?, ?, ?, ?)";
-        String withoutPK = "REPLACE INTO \"public\".\"tbl_without_pk\" \n" +
+        String withoutPK = "INSERT INTO \"public\".\"tbl_without_pk\" \n" +
                 "VALUES (?, ?, ?, ?, ?)";
         RelationalTable tbl_without_pk = new RelationalTable("", "public", "tbl_without_pk", connection);
         RelationalTable tbl_with_pk = new RelationalTable("id", "public", "tbl_with_pk", connection);
-        System.out.println(tbl_with_pk.preparedInsertStatement(""));
-        Assert.assertEquals(withPK, tbl_with_pk.preparedInsertStatement(""));
-        Assert.assertEquals(withoutPK, tbl_without_pk.preparedInsertStatement("\""));
+        System.out.println(tbl_with_pk.preparedUpsertStatement(""));
+        Assert.assertEquals(withPK, tbl_with_pk.preparedUpsertStatement(""));
+        Assert.assertEquals(withoutPK, tbl_without_pk.prepareInsertStatement("\""));
     }
 
     @Test

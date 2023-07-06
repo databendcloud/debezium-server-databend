@@ -13,16 +13,12 @@ import io.debezium.server.databend.DatabendChangeEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.jooq.meta.derby.sys.Sys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.xml.crypto.Data;
 
 public abstract class BaseTableWriter {
 
@@ -36,7 +32,7 @@ public abstract class BaseTableWriter {
     }
 
     public void addToTable(final RelationalTable table, final List<DatabendChangeEvent> events) {
-        final String sql = table.preparedInsertStatement(this.identifierQuoteCharacter);
+        final String sql = table.preparedUpsertStatement( this.identifierQuoteCharacter);
         int inserts = 0;
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {

@@ -48,7 +48,7 @@ public class UpsertTableWriter extends BaseTableWriter {
 
     public void deleteUpsert(final RelationalTable table, final List<DatabendChangeEvent> events) {
 
-        final String upsertSql = table.preparedInsertStatement(this.identifierQuoteCharacter);
+        final String upsertSql = table.preparedUpsertStatement(this.identifierQuoteCharacter);
         int inserts = 0;
         List<DatabendChangeEvent> deleteEvents = new ArrayList<>();
 
@@ -80,7 +80,7 @@ public class UpsertTableWriter extends BaseTableWriter {
     }
 
     public void deleteFromTable(final RelationalTable table, final List<DatabendChangeEvent> events) {
-        // TODO handle delete: sjh
+        // TODO handle delete: hantmac
 
     }
 

@@ -46,13 +46,14 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jooq.meta.derby.sys.Sys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the consumer that delivers the messages to databend database tables.
  *
- * @author Ismail Simsek
+ * @author hantmac
  */
 @Named("databend")
 @Dependent
@@ -82,7 +83,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     String tablePrefix;
     @ConfigProperty(name = "debezium.sink.batch.batch-size-wait", defaultValue = "NoBatchSizeWait")
     String batchSizeWaitName;
-    @ConfigProperty(name = "debezium.format.value.schemas.enable", defaultValue = "false")
+    @ConfigProperty(name = "debezium.format.value.schemas.enable", defaultValue = "true")
     boolean eventSchemaEnabled;
     @Inject
     @Any
@@ -95,11 +96,11 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     String databaseName;
     @ConfigProperty(name = "debezium.sink.databend.database.primaryKey", defaultValue = "id")
     String primaryKey;
-    @ConfigProperty(name = "debezium.sink.databend.database.url")
+    @ConfigProperty(name = "debezium.sink.databend.database.url",defaultValue = "jdbc:databend://localhost:8000")
     String url;
-    @ConfigProperty(name = "debezium.sink.databend.database.username")
+    @ConfigProperty(name = "debezium.sink.databend.database.username",defaultValue = "databend")
     String username;
-    @ConfigProperty(name = "debezium.sink.databend.database.password")
+    @ConfigProperty(name = "debezium.sink.databend.database.password",defaultValue = "databend")
     String password;
 
     @ConfigProperty(name = "debezium.sink.databend.upsert", defaultValue = "true")
@@ -134,7 +135,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
         dataSource.setUrl(url);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
-        properties.setProperty("username", username);
+        properties.setProperty("user", username);
         properties.setProperty("password", password);
         connection = createConnection(dataSource, properties);
 

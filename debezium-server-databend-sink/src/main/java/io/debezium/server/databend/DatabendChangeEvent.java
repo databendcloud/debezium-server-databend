@@ -72,7 +72,7 @@ public class DatabendChangeEvent {
         private final JsonNode valueSchema;
         private final JsonNode keySchema;
 
-        Schema(JsonNode valueSchema, JsonNode keySchema) {
+        public Schema(JsonNode valueSchema, JsonNode keySchema) {
             this.valueSchema = valueSchema;
             this.keySchema = keySchema;
         }

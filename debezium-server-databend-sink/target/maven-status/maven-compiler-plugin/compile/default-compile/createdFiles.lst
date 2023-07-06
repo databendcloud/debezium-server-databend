@@ -15,3 +15,4 @@ io/debezium/server/databend/DatabendChangeEvent$1.class
 io/debezium/server/databend/tablewriter/RelationalTable.class
 io/debezium/server/databend/tablewriter/BaseTableWriter.class
 io/debezium/server/databend/tablewriter/TableNotFoundException.class
+META-INF/sisu/javax.inject.Named
