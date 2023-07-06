@@ -11,9 +11,12 @@ package io.debezium.server.databend.tablewriter;
 import io.debezium.server.databend.DatabendChangeEvent;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,37 +39,57 @@ public class UpsertTableWriter extends BaseTableWriter {
     @Override
     public void addToTable(final RelationalTable table, final List<DatabendChangeEvent> events) {
         if (table.hasPK()) {
-            this.deleteInsert(table, deduplicateBatch(events));
+            this.deleteUpsert(table, deduplicateBatch(events));
         } else {
             // log message
             appendTableWriter.addToTable(table, events);
         }
     }
 
-    public void deleteInsert(final RelationalTable table, final List<DatabendChangeEvent> events) {
+    public void deleteUpsert(final RelationalTable table, final List<DatabendChangeEvent> events) {
 
-//        int inserts = jdbi.withHandle(handle -> {
-//            handle.begin(); // USE SINGLE TRANSACTION
-//            PreparedBatch delete = handle.prepareBatch(table.preparedDeleteStatement(this.identifierQuoteCharacter));
-//            PreparedBatch insert = handle.prepareBatch(table.preparedInsertStatement(this.identifierQuoteCharacter));
-//
-//            for (DatabendChangeEvent row : events) {
-//                // if its deleted row and upsertKeepDeletes = true then  deleted record to target table
-//                // else deleted records are deleted from target table
-//                if (upsertKeepDeletes || !(row.operation().equals("d"))) {// anything which not an insert is upsert
-//                    insert.add(row.valueAsMap());
-//                }
-//
-//                if (!row.operation().equals("c")) { // anything which not an insert is upsert
-//                    delete.add(row.keyAsMap());
-//                }
-//            }
-//
-//            int[] deleted = delete.execute();
-//            int[] inserted = insert.execute();
-//            handle.commit();
-//            return Arrays.stream(deleted).sum() + Arrays.stream(inserted).sum();
-//        });
+        final String upsertSql = table.preparedInsertStatement(this.identifierQuoteCharacter);
+        int inserts = 0;
+        List<DatabendChangeEvent> deleteEvents = new ArrayList<>();
+
+        try (PreparedStatement statement = connection.prepareStatement(upsertSql)) {
+            connection.setAutoCommit(false);
+
+            for (DatabendChangeEvent event : events) {
+                // NOTE: if upsertKeepDeletes = true, delete event data will insert into target table
+                if (upsertKeepDeletes || !event.operation().equals("d")) {
+                    Map<String, Object> values = event.valueAsMap();
+                    addParametersToStatement(statement, values);
+                    statement.addBatch();
+                }
+                if (event.operation().equals("d")) {
+                    deleteEvents.add(event);
+                }
+            }
+
+            int[] batchResult = statement.executeBatch();
+            inserts = Arrays.stream(batchResult).sum();
+            System.out.println(String.format("insert rows %d", inserts));
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+        // handle delete event
+
+    }
+
+    public void deleteFromTable(final RelationalTable table, final List<DatabendChangeEvent> events) {
+        // TODO handle delete: sjh
+
+    }
+
+    private void addParametersToStatement(PreparedStatement statement, Map<String, Object> parameters) throws SQLException {
+        int index = 1;
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            statement.setObject(index, entry.getValue());
+            index++;
+        }
     }
 
     private List<DatabendChangeEvent> deduplicateBatch(List<DatabendChangeEvent> events) {

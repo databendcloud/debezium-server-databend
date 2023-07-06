@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.debezium.DebeziumException;
 
 import java.sql.*;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 import io.debezium.databend.testresources.TargetDatabendDB;
@@ -54,11 +55,11 @@ class RelationalTableTest {
         connection.createStatement().execute(createTableWithoutPkSql);
     }
 
-    @AfterAll
-    static void tearDown() throws SQLException {
-        Statement stmt = connection.createStatement();
-        stmt.execute("DROP DATABASE public");
-    }
+//    @AfterAll
+//    static void tearDown() throws SQLException {
+//        Statement stmt = connection.createStatement();
+//        stmt.execute("DROP DATABASE public");
+//    }
 
     @Test
     void complexTypeBinding() throws SQLException {
@@ -76,7 +77,7 @@ class RelationalTableTest {
             System.out.println("execute batch insert");
             int[] ans = statement.executeBatch();
 
-            System.out.println("Rows inserted=" + ans);
+            System.out.println("Rows inserted=" + Arrays.stream(ans).sum());
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -113,13 +114,13 @@ class RelationalTableTest {
     @Test
     void preparedInsertStatement() {
         String withPK = "REPLACE INTO public.tbl_with_pk \n" +
-                "(coll3 , coll2 , coll1 , id , coll4 ) \n" +
-                "VALUES (:coll3, :coll2, :coll1, :id, :coll4)";
+                "VALUES (?, ?, ?, ?, ?)";
         String withoutPK = "REPLACE INTO \"public\".\"tbl_without_pk\" \n" +
-                "(\"coll3\" , \"coll2\" , \"coll1\" , \"id\" , \"coll4\" ) \n" +
-                "VALUES (:coll3, :coll2, :coll1, :id, :coll4)";
+                "VALUES (?, ?, ?, ?, ?)";
         RelationalTable tbl_without_pk = new RelationalTable("", "public", "tbl_without_pk", connection);
         RelationalTable tbl_with_pk = new RelationalTable("id", "public", "tbl_with_pk", connection);
+        System.out.println("sjh");
+        System.out.println(tbl_with_pk.preparedInsertStatement(""));
         Assert.assertEquals(withPK, tbl_with_pk.preparedInsertStatement(""));
         Assert.assertEquals(withoutPK, tbl_without_pk.preparedInsertStatement("\""));
     }
@@ -130,8 +131,8 @@ class RelationalTableTest {
                 "WHERE id = :id";
         RelationalTable tbl_without_pk = new RelationalTable("", "public", "tbl_without_pk", connection);
         RelationalTable tbl_with_pk = new RelationalTable("id", "public", "tbl_with_pk", connection);
-        System.out.println(tbl_with_pk.preparedDeleteStatement(""));
-        Assert.assertEquals(withPK, tbl_with_pk.preparedDeleteStatement(""));
-        Assert.assertThrows(DebeziumException.class, () -> tbl_without_pk.preparedDeleteStatement(""));
+        System.out.println(tbl_with_pk.preparedDeleteStatement("", ":id"));
+        Assert.assertEquals(withPK, tbl_with_pk.preparedDeleteStatement("", ":id"));
+        Assert.assertThrows(DebeziumException.class, () -> tbl_without_pk.preparedDeleteStatement("", ":id"));
     }
 }

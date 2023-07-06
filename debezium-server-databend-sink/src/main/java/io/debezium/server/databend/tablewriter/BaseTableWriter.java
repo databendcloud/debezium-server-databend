@@ -11,13 +11,18 @@ package io.debezium.server.databend.tablewriter;
 import io.debezium.server.databend.DatabendChangeEvent;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.jooq.meta.derby.sys.Sys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.crypto.Data;
 
 public abstract class BaseTableWriter {
 
@@ -32,18 +37,28 @@ public abstract class BaseTableWriter {
 
     public void addToTable(final RelationalTable table, final List<DatabendChangeEvent> events) {
         final String sql = table.preparedInsertStatement(this.identifierQuoteCharacter);
-        try {
-            Statement stmt = connection.prepareStatement(sql);
-        } catch (Exception e) {
-        }
-        System.out.println("the debezium event is:");
-        System.out.println(events);
+        int inserts = 0;
 
-//        int inserts = jdbi.withHandle(handle -> {
-//            PreparedBatch b = handle.prepareBatch(sql);
-//            events.forEach(e -> b.add(e.valueAsMap()));
-//            return Arrays.stream(b.execute()).sum();
-//        });
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
+
+            for (DatabendChangeEvent event : events) {
+                Map<String, Object> values = event.valueAsMap();
+                int index = 1;
+                for (String key : values.keySet()) {
+                    statement.setObject(index++, values.get(key));
+                }
+                statement.addBatch();
+            }
+
+            int[] batchResult = statement.executeBatch();
+            inserts = Arrays.stream(batchResult).sum();
+            System.out.printf("insert rows %d%n", inserts);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
 }
+

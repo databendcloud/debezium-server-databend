@@ -49,8 +49,8 @@ public class RelationalTable {
                     try (ResultSet tColumns = meta.getColumns(catalog, schema, tableName, null)) {
                         while (tColumns.next()) {
                             String columnName = tColumns.getString("COLUMN_NAME");
+                            System.out.println(columnName);
                             DatabendRawType databendRawType = new DatabendRawType(columnName);
-//                            DatabendTypes datatype = JDBCType.valueOf(tColumns.getInt("DATA_TYPE"));
                             columns.put(columnName, databendRawType);
                         }
                     }
@@ -83,17 +83,15 @@ public class RelationalTable {
     public String preparedInsertStatement(String identifierQuoteCharacter) {
         StringBuilder sql = new StringBuilder();
         sql.append(String.format("REPLACE INTO %s%s%s.%s%s%s \n", identifierQuoteCharacter, databaseName, identifierQuoteCharacter, identifierQuoteCharacter, tableName, identifierQuoteCharacter));
-
         Set<String> fields = this.columns.keySet();
+//        sql.append(String.format("(%s) \n", fields.stream().map(f -> String.format("%s%s%s ", identifierQuoteCharacter, f, identifierQuoteCharacter)).collect(Collectors.joining(", "))));
 
-        sql.append(String.format("(%s) \n", fields.stream().map(f -> String.format("%s%s%s ", identifierQuoteCharacter, f, identifierQuoteCharacter)).collect(Collectors.joining(", "))));
-
-        sql.append(String.format("VALUES (%s)\n", fields.stream().map(f -> String.format(":%s", f)).collect(Collectors.joining(", "))));
+        sql.append(String.format("VALUES (%s)\n", fields.stream().map(f -> "?").collect(Collectors.joining(", "))));
 
         return sql.toString().trim();
     }
 
-    public String preparedDeleteStatement(String identifierQuoteCharacter) {
+    public String preparedDeleteStatement(String identifierQuoteCharacter, String deleteVal) {
 
         if (!hasPK()) {
             throw new DebeziumException("Cant delete from a table without primary key!");
@@ -104,7 +102,7 @@ public class RelationalTable {
 
         Set<String> fields = this.primaryKeysMap.keySet();
 
-        sql.append(String.format("%s \n", fields.stream().map(f -> String.format("%s%s%s = :%s ", identifierQuoteCharacter, f, identifierQuoteCharacter, f)).collect(Collectors.joining("\n    AND "))));
+        sql.append(String.format("%s \n", fields.stream().map(f -> String.format("%s%s%s = %s ", identifierQuoteCharacter, f, identifierQuoteCharacter, deleteVal)).collect(Collectors.joining("\n    AND "))));
 
         return sql.toString().trim();
     }
