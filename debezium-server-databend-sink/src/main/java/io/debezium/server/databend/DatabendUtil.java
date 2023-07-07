@@ -63,7 +63,7 @@ public class DatabendUtil {
     }
 
     private static Map<String, DataType<?>> fields(JsonNode eventSchema, String schemaName, int columnId) {
-        Map<String, DataType<?>> fields = new HashMap<>();
+        Map<String, DataType<?>> fields = new LinkedHashMap<>();
         String schemaType = eventSchema.get("type").textValue();
         LOGGER.debug("Converting Schema of: {}::{}", schemaName, schemaType);
         for (JsonNode jsonSchemaFieldNode : eventSchema.get("fields")) {
