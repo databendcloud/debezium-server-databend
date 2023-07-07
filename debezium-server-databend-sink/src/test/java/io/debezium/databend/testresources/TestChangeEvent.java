@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright memiiso Authors.
+ *  * Copyright Databend Authors.
  *  *
  *  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -17,7 +17,7 @@ import java.time.Instant;
 /**
  * helper class used to generate test customer change events
  *
- * @author Ismail Simsek
+ * @author hantmac
  */
 public class TestChangeEvent<K, V> implements ChangeEvent<K, V>, RecordChangeEvent<V> {
 

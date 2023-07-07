@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 /**
  * helper class used to generate test change events
  *
- * @author Ismail Simsek
+ * @author  hantmac
  */
 public class DatabendChangeEventBuilder {
 

@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright memiiso Authors.
+ *  * Copyright Databend Authors.
  *  *
  *  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Integration test that verifies basic reading from PostgreSQL database and writing to databend destination.
  *
- * @author Ismail Simsek
+ * @author  hantmac
  */
 @QuarkusTest
 @QuarkusTestResource(SourcePostgresqlDB.class)

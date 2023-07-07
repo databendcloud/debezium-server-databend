@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright memiiso Authors.
+ *  * Copyright Databend Authors.
  *  *
  *  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -14,7 +14,7 @@ import org.apache.spark.sql.SparkSession;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
- * @author Ismail Simsek
+ * @author hantmac
  */
 public class BaseDbTest {
   @ConfigProperty(name = "debezium.sink.databend.table-prefix", defaultValue = "debezium")
