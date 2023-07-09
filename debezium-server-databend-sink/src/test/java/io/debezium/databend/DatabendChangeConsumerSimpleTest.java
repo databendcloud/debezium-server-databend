@@ -15,9 +15,12 @@ import io.debezium.databend.testresources.TestUtil;
 import io.debezium.server.databend.DatabendChangeConsumer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +43,7 @@ public class DatabendChangeConsumerSimpleTest extends BaseDbTest {
         records.add(TestChangeEvent.of(dest, 2, "c"));
         records.add(TestChangeEvent.of(dest, 3, "c"));
         consumer.handleBatch(records, TestUtil.getCommitter());
+
         // check that its consumed!
         // 3 records should be updated 4th one should be inserted
         records.clear();
@@ -49,4 +53,10 @@ public class DatabendChangeConsumerSimpleTest extends BaseDbTest {
         records.add(TestChangeEvent.of(dest, 4, "c"));
         consumer.handleBatch(records, TestUtil.getCommitter());
     }
+
+    @AfterEach
+    public void clearData() throws SQLException, ClassNotFoundException {
+        ResultSet rs = select("delete from public.debeziumcdc_customers_append");
+    }
 }
+
