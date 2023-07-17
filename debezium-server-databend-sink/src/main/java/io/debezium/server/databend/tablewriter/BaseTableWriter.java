@@ -32,7 +32,7 @@ public abstract class BaseTableWriter {
     }
 
     public void addToTable(final RelationalTable table, final List<DatabendChangeEvent> events) {
-        final String sql = table.preparedUpsertStatement( this.identifierQuoteCharacter);
+        final String sql = table.prepareInsertStatement(this.identifierQuoteCharacter);
         int inserts = 0;
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {

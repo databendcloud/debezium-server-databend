@@ -56,6 +56,9 @@ public class DatabendChangeEvent {
     }
 
     public String operation() {
+        if (value == null || value.get("__op") == null) {
+            return "c";
+        }
         return value().get("__op").textValue();
     }
 

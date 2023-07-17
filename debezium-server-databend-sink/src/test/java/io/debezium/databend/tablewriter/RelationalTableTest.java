@@ -14,6 +14,7 @@ import io.debezium.DebeziumException;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 
 import io.debezium.databend.testresources.TargetDatabendDB;
 import com.mongodb.assertions.Assertions;

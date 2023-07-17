@@ -80,10 +80,10 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     String keyFormat;
     public Connection connection;
     @ConfigProperty(name = "debezium.sink.databend.table-prefix", defaultValue = "")
-    String tablePrefix;
+    Optional<String> tablePrefix;
     @ConfigProperty(name = "debezium.sink.batch.batch-size-wait", defaultValue = "NoBatchSizeWait")
     String batchSizeWaitName;
-    @ConfigProperty(name = "debezium.format.value.schemas.enable", defaultValue = "true")
+    @ConfigProperty(name = "debezium.format.value.schemas.enable", defaultValue = "false")
     boolean eventSchemaEnabled;
     @Inject
     @Any
@@ -94,14 +94,16 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     BaseTableWriter tableWriter;
     @ConfigProperty(name = "debezium.sink.databend.database.databaseName", defaultValue = "debezium")
     String databaseName;
-    @ConfigProperty(name = "debezium.sink.databend.database.primaryKey", defaultValue = "id")
-    String primaryKey;
-    @ConfigProperty(name = "debezium.sink.databend.database.url",defaultValue = "jdbc:databend://localhost:8000")
+    @ConfigProperty(name = "debezium.sink.databend.database.primaryKey", defaultValue = "")
+    Optional<String> primaryKey;
+    @ConfigProperty(name = "debezium.sink.databend.database.url", defaultValue = "jdbc:databend://localhost:8000")
     String url;
-    @ConfigProperty(name = "debezium.sink.databend.database.username",defaultValue = "databend")
+    @ConfigProperty(name = "debezium.sink.databend.database.username", defaultValue = "databend")
     String username;
-    @ConfigProperty(name = "debezium.sink.databend.database.password",defaultValue = "databend")
+    @ConfigProperty(name = "debezium.sink.databend.database.password", defaultValue = "databend")
     String password;
+    @ConfigProperty(name = "debezium.sink.databend.database.tableName", defaultValue = "")
+    Optional<String> tableName;
 
     @ConfigProperty(name = "debezium.sink.databend.upsert", defaultValue = "true")
     boolean upsert;
@@ -125,8 +127,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
         batchSizeWait.initizalize();
 
         Properties properties = new Properties();
-        Map<String, String> conf = DatabendUtil.getConfigSubset(ConfigProvider.getConfig(), "debezium.sink.databend.database" +
-                ".param.");
+        Map<String, String> conf = DatabendUtil.getConfigSubset(ConfigProvider.getConfig(), "debezium.sink.databend.database.param.");
         properties.putAll(conf);
         LOGGER.trace("Databend Properties: {}", properties);
         LOGGER.trace("Databend url {}", url);
@@ -152,7 +153,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     public RelationalTable getDatabendTable(String tableName, DatabendChangeEvent.Schema schema) throws DebeziumException {
         RelationalTable t;
         try {
-            t = new RelationalTable(primaryKey, databaseName, tableName, connection);
+            t = new RelationalTable(primaryKey.orElse(""), databaseName, tableName, connection);
         } catch (TableNotFoundException e) {
             //t = createTable;
             if (!eventSchemaEnabled) {
@@ -163,7 +164,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
             LOGGER.debug("Target table not found creating it!");
             DatabendUtil.createTable(databaseName, tableName, connection, schema, upsert);
             // get table after reading it
-            t = new RelationalTable(primaryKey, databaseName, tableName, connection);
+            t = new RelationalTable(primaryKey.orElse(""), databaseName, tableName, connection);
         }
 
         return t;
@@ -224,9 +225,13 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     }
 
     public String mapDestination(String destination) {
-        final String tableName = destination
+        System.out.printf("sjh:%s", tableName.orElse(""));
+        if (tableName.isPresent()) {
+            return tablePrefix.orElse("") + tableName.orElse("");
+        }
+        final String getTableName = destination
                 .replaceAll(destinationRegexp.orElse(""), destinationRegexpReplace.orElse(""))
                 .replace(".", "_");
-        return tablePrefix + tableName;
+        return tablePrefix.orElse("") + getTableName;
     }
 }

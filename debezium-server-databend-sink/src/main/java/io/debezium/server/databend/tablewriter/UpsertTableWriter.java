@@ -13,14 +13,16 @@ import io.debezium.server.databend.DatabendChangeEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
+import org.jooq.meta.derby.sys.Sys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.validation.constraints.Null;
 
 
 public class UpsertTableWriter extends BaseTableWriter {
@@ -29,6 +31,7 @@ public class UpsertTableWriter extends BaseTableWriter {
     final String sourceTsMsColumn = "__source_ts_ms";
     final String opColumn = "__op";
     final boolean upsertKeepDeletes;
+    protected static final Logger LOGGER = LoggerFactory.getLogger(UpsertTableWriter.class);
 
     public UpsertTableWriter(Connection connection, String identifierQuoteCharacter, boolean upsertKeepDeletes) {
         super(connection, identifierQuoteCharacter);
@@ -61,8 +64,7 @@ public class UpsertTableWriter extends BaseTableWriter {
                     Map<String, Object> values = event.valueAsMap();
                     addParametersToStatement(statement, values);
                     statement.addBatch();
-                }
-                if (event.operation().equals("d")) {
+                } else if (event.operation().equals("d")) {
                     deleteEvents.add(event);
                 }
             }
@@ -72,24 +74,55 @@ public class UpsertTableWriter extends BaseTableWriter {
             System.out.println(String.format("insert rows %d", inserts));
 
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
 
         // handle delete event
+        try {
+            deleteFromTable(table, deleteEvents);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
 
     }
 
-    public void deleteFromTable(final RelationalTable table, final List<DatabendChangeEvent> events) {
-        // TODO handle delete: hantmac
-
+    public void deleteFromTable(final RelationalTable table, final List<DatabendChangeEvent> events) throws Exception {
+        for (DatabendChangeEvent event : events) {
+            Map<String, Object> values = event.valueAsMap();
+            String deleteSql = table.preparedDeleteStatement(this.identifierQuoteCharacter, getPrimaryKeyValue(table.primaryKey, values));
+            try (PreparedStatement statement = connection.prepareStatement(deleteSql)) {
+                statement.execute(deleteSql);
+            } catch (SQLException e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        }
     }
 
     private void addParametersToStatement(PreparedStatement statement, Map<String, Object> parameters) throws SQLException {
         int index = 1;
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-            statement.setObject(index, entry.getValue());
+            Object value = entry.getValue();
+            System.out.printf("sjh %s",entry);
+            statement.setObject(index, value);
             index++;
         }
+        System.out.printf("sjh %d", index);
+    }
+
+    private String getPrimaryKeyValue(String primaryKey, Map<String, Object> parameters) throws Exception {
+        String primaryValue = "";
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            if (Objects.equals(primaryKey, entry.getKey())) {
+                primaryValue = String.valueOf(entry.getValue());
+                return primaryValue;
+            }
+        }
+        if (primaryValue.equals("")) {
+            throw new Exception("No primary key set");
+        }
+
+        return primaryValue;
     }
 
     private List<DatabendChangeEvent> deduplicateBatch(List<DatabendChangeEvent> events) {
@@ -98,7 +131,7 @@ public class UpsertTableWriter extends BaseTableWriter {
         events.forEach(e ->
                 // deduplicate using key(PK)
                 deduplicatedEvents.merge(e.key(), e, (oldValue, newValue) -> {
-                    if (this.compareByTsThenOp(oldValue.value(), newValue.value()) <= 0) {
+                    if (oldValue != null && newValue != null && this.compareByTsThenOp(oldValue.value(), newValue.value()) <= 0) {
                         return newValue;
                     } else {
                         return oldValue;
@@ -109,7 +142,12 @@ public class UpsertTableWriter extends BaseTableWriter {
     }
 
     private int compareByTsThenOp(JsonNode lhs, JsonNode rhs) {
-
+        if (lhs == null || rhs == null) {
+            return 0;
+        }
+        if (lhs.get(sourceTsMsColumn) == null || rhs.get(sourceTsMsColumn) == null) {
+            return 0;
+        }
         int result = Long.compare(lhs.get(sourceTsMsColumn).asLong(0), rhs.get(sourceTsMsColumn).asLong(0));
 
         if (result == 0) {

@@ -1,13 +1,12 @@
 # Use databend sink
 debezium.sink.type=databend
-debezium.sink.databend.upsert=false
-debezium.sink.databend.upsert-keep-deletes=true
+debezium.sink.databend.upsert=true
+debezium.sink.databend.upsert-keep-deletes=false
 debezium.sink.databend.database.databaseName=debezium
 debezium.sink.databend.table-prefix=debeziumcdc_
-debezium.sink.databend.database.host=host
-debezium.sink.databend.database.port=port
-debezium.sink.databend.database.username=user
-debezium.sink.databend.database.password=pass
+debezium.sink.databend.database.url=jdbc:databend://localhost:8000
+debezium.sink.databend.database.username=databend
+debezium.sink.databend.database.password=databend
 # additional databend parameters
 debezium.sink.databend.database.param.key=val # replace the key and val using custom
 

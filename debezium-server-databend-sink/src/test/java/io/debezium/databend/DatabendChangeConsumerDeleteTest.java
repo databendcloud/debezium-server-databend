@@ -35,8 +35,8 @@ import java.util.Map;
  */
 @QuarkusTest
 @QuarkusTestResource(TargetDatabendDB.class)
-@TestProfile(DatabendChangeConsumerUpsertTest.DatabendChangeConsumerUpsertTestProfile.class)
-public class DatabendChangeConsumerUpsertTest extends BaseDbTest {
+@TestProfile(DatabendChangeConsumerDeleteTest.DatabendChangeConsumerDeleteProfile.class)
+public class DatabendChangeConsumerDeleteTest extends BaseDbTest {
     @Inject
     DatabendChangeConsumer consumer;
 
@@ -44,16 +44,16 @@ public class DatabendChangeConsumerUpsertTest extends BaseDbTest {
     public void testSimpleUpload() throws Exception {
         consumer.connection = new TargetDatabendDB().createConnection();
 
-        String dest = "customers_upsert";
+        String dest = "customers_delete";
         List<io.debezium.engine.ChangeEvent<Object, Object>> records = new ArrayList<>();
         records.add(TestChangeEvent.of(dest, 1, "c"));
         records.add(TestChangeEvent.of(dest, 2, "c"));
         records.add(TestChangeEvent.of(dest, 3, "c"));
         consumer.handleBatch(records, TestUtil.getCommitter());
         // check that its consumed!
-        ResultSet rs = getDatabendTableData("select * from public.debeziumcdc_customers_upsert");
+        ResultSet rs = getDatabendTableData("select * from public.debeziumcdc_customers_delete");
         Assertions.assertEquals(getResultSetRowCount(rs), 3);
-        ResultSet rs1 = getDatabendTableData("select * from public.debeziumcdc_customers_upsert where id =3");
+        ResultSet rs1 = getDatabendTableData("select * from public.debeziumcdc_customers_delete where id =3");
         if (rs1.next()) {
             int id = rs1.getInt("id");
             Assertions.assertEquals(3, id);
@@ -68,29 +68,29 @@ public class DatabendChangeConsumerUpsertTest extends BaseDbTest {
         records.add(TestChangeEvent.of(dest, 3, "u", "UpdatednameV1"));
         records.add(TestChangeEvent.of(dest, 4, "c"));
         consumer.handleBatch(records, TestUtil.getCommitter());
-        ResultSet rsR = getDatabendTableData("select * from public.debeziumcdc_customers_upsert where id = 1 AND __op= 'r'");
+        ResultSet rsR = getDatabendTableData("select * from public.debeziumcdc_customers_delete where id = 1 AND __op= 'r'");
         Assertions.assertEquals(getResultSetRowCount(rsR), 1);
-        ResultSet rsD = getDatabendTableData("select * from public.debeziumcdc_customers_upsert where id = 2 AND __op= 'd'");
+        ResultSet rsD = getDatabendTableData("select * from public.debeziumcdc_customers_delete where id = 2 AND __op= 'd'");
         Assertions.assertEquals(getResultSetRowCount(rsD), 1);
-        ResultSet rsU = getDatabendTableData("select * from public.debeziumcdc_customers_upsert where id = 3 AND __op= 'u'");
+        ResultSet rsU = getDatabendTableData("select * from public.debeziumcdc_customers_delete where id = 3 AND __op= 'u'");
         Assertions.assertEquals(getResultSetRowCount(rsU), 1);
-        ResultSet rsUName = getDatabendTableData("select * from public.debeziumcdc_customers_upsert where id = 3 AND first_name= 'UpdatednameV1'");
+        ResultSet rsUName = getDatabendTableData("select * from public.debeziumcdc_customers_delete where id = 3 AND first_name= 'UpdatednameV1'");
         Assertions.assertEquals(getResultSetRowCount(rsUName), 1);
     }
 
     @AfterEach
     public void clearData() throws SQLException, ClassNotFoundException {
-        ResultSet rs = select("delete from public.debeziumcdc_customers_upsert");
+        ResultSet rs = select("delete from public.debeziumcdc_customers_delete");
     }
 
-    public static class DatabendChangeConsumerUpsertTestProfile implements QuarkusTestProfile {
+    public static class DatabendChangeConsumerDeleteProfile implements QuarkusTestProfile {
 
         @Override
         public Map<String, String> getConfigOverrides() {
             Map<String, String> config = new HashMap<>();
 
             config.put("debezium.sink.databend.upsert", "true");
-            config.put("debezium.sink.databend.upsert-keep-deletes", "true");
+            config.put("debezium.sink.databend.upsert-keep-deletes", "false");
             return config;
         }
     }

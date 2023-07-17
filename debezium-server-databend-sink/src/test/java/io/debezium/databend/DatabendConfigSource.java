@@ -34,7 +34,7 @@ public class DatabendConfigSource extends TestConfigSource {
         config.put("debezium.transforms.unwrap.drop.tombstones", "true");
 
         // DEBEZIUM SOURCE conf
-        config.put("debezium.source.offset.storage", "org.apache.kafka.connect.storage.MemoryOffsetBackingStore");
+        config.put("debezium.source.offset.storage.file.filename", "data/offsets.dat");
         config.put("debezium.source.database.history", "io.debezium.relational.history.MemoryDatabaseHistory");
         config.put("debezium.source.offset.flush.interval.ms", "60000");
         config.put("debezium.source.database.server.name", "testc");
