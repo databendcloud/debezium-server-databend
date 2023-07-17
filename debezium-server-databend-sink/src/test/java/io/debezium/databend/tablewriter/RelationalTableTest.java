@@ -23,6 +23,7 @@ import io.debezium.server.databend.tablewriter.RelationalTable;
 import static io.debezium.server.databend.DatabendChangeConsumer.mapper;
 
 import org.junit.Assert;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -45,11 +46,11 @@ class RelationalTableTest {
         connection.createStatement().execute(createTableWithoutPkSql);
     }
 
-//    @AfterAll
-//    static void tearDown() throws SQLException {
-//        Statement stmt = connection.createStatement();
-//        stmt.execute("DROP DATABASE public");
-//    }
+    @AfterAll
+    static void tearDown() throws SQLException {
+        Statement stmt = connection.createStatement();
+        stmt.execute("DROP DATABASE public");
+    }
 
     @Test
     void complexTypeBinding() throws SQLException {

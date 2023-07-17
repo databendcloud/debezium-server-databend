@@ -225,7 +225,6 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     }
 
     public String mapDestination(String destination) {
-        System.out.printf("sjh:%s", tableName.orElse(""));
         if (tableName.isPresent()) {
             return tablePrefix.orElse("") + tableName.orElse("");
         }

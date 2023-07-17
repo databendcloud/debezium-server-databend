@@ -103,11 +103,9 @@ public class UpsertTableWriter extends BaseTableWriter {
         int index = 1;
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             Object value = entry.getValue();
-            System.out.printf("sjh %s",entry);
             statement.setObject(index, value);
             index++;
         }
-        System.out.printf("sjh %d", index);
     }
 
     private String getPrimaryKeyValue(String primaryKey, Map<String, Object> parameters) throws Exception {
@@ -128,16 +126,17 @@ public class UpsertTableWriter extends BaseTableWriter {
     private List<DatabendChangeEvent> deduplicateBatch(List<DatabendChangeEvent> events) {
 
         ConcurrentHashMap<JsonNode, DatabendChangeEvent> deduplicatedEvents = new ConcurrentHashMap<>();
-        events.forEach(e ->
-                // deduplicate using key(PK)
-                deduplicatedEvents.merge(e.key(), e, (oldValue, newValue) -> {
-                    if (oldValue != null && newValue != null && this.compareByTsThenOp(oldValue.value(), newValue.value()) <= 0) {
-                        return newValue;
-                    } else {
-                        return oldValue;
-                    }
-                })
-        );
+        events.stream()
+                .filter(Objects::nonNull) // filter null object
+                .forEach(e -> {
+                    deduplicatedEvents.merge(e.key(), e, (oldValue, newValue) -> {
+                        if (oldValue != null && newValue != null && compareByTsThenOp(oldValue.value(), newValue.value()) <= 0) {
+                            return newValue;
+                        } else {
+                            return oldValue;
+                        }
+                    });
+                });
         return new ArrayList<>(deduplicatedEvents.values());
     }
 

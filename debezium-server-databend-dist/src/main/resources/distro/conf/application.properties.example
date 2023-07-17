@@ -16,7 +16,7 @@ debezium.format.key.schemas.enable=true
 debezium.format.value=json
 debezium.format.key=json
 
-# mysql source
+# mysql source, related docs: https://docs.confluent.io/kafka-connectors/debezium-mysql-source/current/mysql_source_connector_config.html
 debezium.source.connector.class=io.debezium.connector.mysql.MySqlConnector
 debezium.source.offset.storage.file.filename=data/offsets.dat
 debezium.source.offset.flush.interval.ms=60000
@@ -28,6 +28,7 @@ debezium.source.database.password=mysqlPassword
 debezium.source.database.dbname=mydb
 debezium.source.database.server.name=serverName
 debezium.source.include.schema.changes=false
+# debezium.source.table.include.list=databaseName.tableName
 # debezium.source.database.ssl.mode=required
 # Run without Kafka, use local file to store checkpoints
 debezium.source.database.history=io.debezium.relational.history.FileDatabaseHistory
