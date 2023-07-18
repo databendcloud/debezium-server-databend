@@ -30,6 +30,7 @@ public class UpsertTableWriter extends BaseTableWriter {
     private final AppendTableWriter appendTableWriter;
     final String sourceTsMsColumn = "__source_ts_ms";
     final String opColumn = "__op";
+    final String deleteColumn = "__delete";
     final boolean upsertKeepDeletes;
     protected static final Logger LOGGER = LoggerFactory.getLogger(UpsertTableWriter.class);
 
@@ -50,7 +51,6 @@ public class UpsertTableWriter extends BaseTableWriter {
     }
 
     public void deleteUpsert(final RelationalTable table, final List<DatabendChangeEvent> events) {
-
         final String upsertSql = table.preparedUpsertStatement(this.identifierQuoteCharacter);
         int inserts = 0;
         List<DatabendChangeEvent> deleteEvents = new ArrayList<>();
@@ -59,12 +59,15 @@ public class UpsertTableWriter extends BaseTableWriter {
             connection.setAutoCommit(false);
 
             for (DatabendChangeEvent event : events) {
+                System.out.println(event.operation());
                 // NOTE: if upsertKeepDeletes = true, delete event data will insert into target table
                 if (upsertKeepDeletes || !event.operation().equals("d")) {
                     Map<String, Object> values = event.valueAsMap();
-                    addParametersToStatement(statement, values);
+                    addParametersToStatement(statement, values, event.keyAsMap());
                     statement.addBatch();
                 } else if (event.operation().equals("d")) {
+                    // here use soft delete
+                    // if true delete, we can use this condition event.keyAsMap().containsKey(deleteColumn)
                     deleteEvents.add(event);
                 }
             }
@@ -92,6 +95,7 @@ public class UpsertTableWriter extends BaseTableWriter {
             Map<String, Object> values = event.valueAsMap();
             String deleteSql = table.preparedDeleteStatement(this.identifierQuoteCharacter, getPrimaryKeyValue(table.primaryKey, values));
             try (PreparedStatement statement = connection.prepareStatement(deleteSql)) {
+                System.out.println(deleteSql);
                 statement.execute(deleteSql);
             } catch (SQLException e) {
                 throw new RuntimeException(e.getMessage());
@@ -99,7 +103,7 @@ public class UpsertTableWriter extends BaseTableWriter {
         }
     }
 
-    private void addParametersToStatement(PreparedStatement statement, Map<String, Object> parameters) throws SQLException {
+    private void addParametersToStatement(PreparedStatement statement, Map<String, Object> parameters, Map<String, Object> keys) throws SQLException {
         int index = 1;
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             Object value = entry.getValue();
@@ -124,7 +128,6 @@ public class UpsertTableWriter extends BaseTableWriter {
     }
 
     private List<DatabendChangeEvent> deduplicateBatch(List<DatabendChangeEvent> events) {
-
         ConcurrentHashMap<JsonNode, DatabendChangeEvent> deduplicatedEvents = new ConcurrentHashMap<>();
         events.stream()
                 .filter(Objects::nonNull) // filter null object
