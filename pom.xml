@@ -38,10 +38,12 @@
         <dependency>
             <groupId>com.databend</groupId>
             <artifactId>databend-jdbc</artifactId>
+            <version>0.0.9</version>
         </dependency>
         <dependency>
             <groupId>com.databend</groupId>
             <artifactId>databend-client</artifactId>
+            <version>0.0.9</version>
         </dependency>
         <dependency>
             <groupId>org.jdbi</groupId>
