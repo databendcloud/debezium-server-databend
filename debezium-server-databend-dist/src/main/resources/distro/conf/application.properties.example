@@ -8,7 +8,7 @@ debezium.sink.databend.database.password=databend
 # debezium.sink.databend.database.primaryKey=id
 # debezium.sink.databend.database.tableName=products
 # additional databend parameters
-debezium.sink.jdbc.database.param.ssl=false
+debezium.sink.databend.database.param.ssl=false
 
 # enable event schemas
 debezium.format.value.schemas.enable=true
