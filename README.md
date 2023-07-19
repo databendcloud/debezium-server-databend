@@ -1,5 +1,5 @@
 # debezium-server-databend
-This project could be used to receive database CDC changes from debezium server and send it to [databend](https://github.com/datafuselabs/databend) table.It's in realtime and  started independently without the need for auxiliary streaming platforms such as Kafka and Spark. 
+This project could be used to receive database CDC changes from debezium server and send it to [databend](https://github.com/datafuselabs/databend) table.It's in realtime and  started independently without the need for auxiliary streaming platforms such as Kafka, Flink and Spark. 
 
 # debezium databend consumer
 The detail introduction docs available in [docs page](./docs/docs.md)
