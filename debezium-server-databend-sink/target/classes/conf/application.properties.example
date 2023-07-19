@@ -23,17 +23,30 @@ debezium.format.value=json
 debezium.format.key=json
 
 
-# mysql source
+# mysql source, related docs: https://docs.confluent.io/kafka-connectors/debezium-mysql-source/current/mysql_source_connector_config.html
 debezium.source.connector.class=io.debezium.connector.mysql.MySqlConnector
 debezium.source.offset.storage.file.filename=data/offsets.dat
 debezium.source.offset.flush.interval.ms=60000
 
 debezium.source.database.hostname=127.0.0.1
 debezium.source.database.port=3306
-debezium.source.database.user=user
-debezium.source.database.password=xyz
+debezium.source.database.user=mysqlUser
+debezium.source.database.password=mysqlPassword
 debezium.source.database.dbname=mydb
+debezium.source.database.server.name=serverName
+debezium.source.include.schema.changes=false
+# debezium.source.table.include.list=databaseName.tableName
 # debezium.source.database.ssl.mode=required
+# Run without Kafka, use local file to store checkpoints
+debezium.source.database.history=io.debezium.relational.history.FileDatabaseHistory
+debezium.source.database.history.file.filename=data/status.dat
+# do event flattening. unwrap message! delete mode must open there conf
+debezium.transforms=unwrap
+debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
+#debezium.transforms.unwrap.add.fields=op,table,source.ts_ms,db
+debezium.transforms.unwrap.delete.handling.mode=rewrite
+# make tombstones as true to soft delete
+debezium.transforms.unwrap.drop.tombstones=true
 
 # false = ("op": "r") AND true = ("op": "c")
 debezium.source.snapshot.events.as.inserts=false

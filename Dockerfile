@@ -5,6 +5,7 @@ LABEL org.opencontainers.image.licenses=Apache
 RUN apt-get -qq update && apt-get -qq install maven unzip
 COPY . /app
 WORKDIR /app
+RUN mvn clean install -DskipTests
 RUN mvn clean package -Passembly -Dmaven.test.skip --quiet
 RUN unzip /app/debezium-server-databend-dist/target/debezium-server-databend-dist*.zip -d appdist
 

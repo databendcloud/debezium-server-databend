@@ -8,7 +8,7 @@ debezium.sink.databend.database.password=databend
 # debezium.sink.databend.database.primaryKey=id
 # debezium.sink.databend.database.tableName=products
 # additional databend parameters
-debezium.sink.jdbc.database.param.ssl=false
+debezium.sink.databend.database.param.ssl=false
 
 # enable event schemas
 debezium.format.value.schemas.enable=true
@@ -33,11 +33,12 @@ debezium.source.include.schema.changes=false
 # Run without Kafka, use local file to store checkpoints
 debezium.source.database.history=io.debezium.relational.history.FileDatabaseHistory
 debezium.source.database.history.file.filename=data/status.dat
-# do event flattening. unwrap message!
+# do event flattening. unwrap message! delete mode must open there conf
 debezium.transforms=unwrap
 debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
 #debezium.transforms.unwrap.add.fields=op,table,source.ts_ms,db
-#debezium.transforms.unwrap.delete.handling.mode=rewrite
+debezium.transforms.unwrap.delete.handling.mode=rewrite
+# make tombstones as true to soft delete
 debezium.transforms.unwrap.drop.tombstones=true
 
 # ############ SET LOG LEVELS ############
