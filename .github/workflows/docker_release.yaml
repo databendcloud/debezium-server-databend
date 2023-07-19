@@ -3,18 +3,15 @@ name: Create and publish a Docker image
 
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
 on:
-  pull_request:
-    branches: [ main ]
-    paths:
-      - ".github/workflows/docker_release.yaml"
-
-#  push:
-#    branches: ['release']
+  create:
+    tags:
+      - 'v*' # 匹配以 'v' 开头的标签
 
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DOCKER_TAG: ${{ GITHUB_REF#refs/tags/ }}
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
@@ -49,5 +46,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
