@@ -40,6 +40,10 @@
             <artifactId>databend-jdbc</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.databend</groupId>
+            <artifactId>databend-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jdbi</groupId>
             <artifactId>jdbi3-core</artifactId>
         </dependency>
