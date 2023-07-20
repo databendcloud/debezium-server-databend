@@ -11,7 +11,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  DOCKER_TAG: ${{ GITHUB_REF#refs/tags/ }}
+  DOCKER_TAG: ${{ github.ref && contains(github.ref, 'refs/tags/') && replace(github.ref, 'refs/tags/', '') }}
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
