@@ -212,8 +212,6 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
             tableWriter.addToTable(tbl, tableEvents.getValue());
         }
 
-        // workaround! somehow offset is not saved to file unless we call committer.markProcessed
-        // even it's should be saved to file periodically
         for (ChangeEvent<Object, Object> record : records) {
             LOGGER.trace("Processed event '{}'", record);
             committer.markProcessed(record);
