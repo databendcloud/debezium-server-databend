@@ -133,6 +133,13 @@ Or if user don't like this kind of table name mapping, just use `debezium.sink.d
 
 Read [application.properties.example](../debezium-server-databend-sink/src/main/resources/conf/application.properties.example)
 
+### Problems and Points for improvement
+- Due to the integration of Debezium Engine, full-load reading phase does not support checkpoint. After a failure, it needs to be re-read.
+- Currently, only single concurrency is supported, and horizontal scaling is not supported.
+- When ensuring data consistency, Debezium needs to apply locks to the read databases or tables. Global locks may cause the database to hang, while table-level locks can restrict table reads.
+
+So perhaps in the next step, we can draw inspiration from Netflix DBLog's lock-free algorithm to improve these issues.
+
 ### Related docs
 
 [debezium-mysql-connector](https://debezium.io/documentation/reference/2.0/connectors/mysql.html#mysql-property-table-include-list)

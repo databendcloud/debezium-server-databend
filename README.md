@@ -20,7 +20,6 @@ The detail introduction docs available in [docs page](./docs/docs.md)
       in [application.properties.example](debezium-server-databend-sink/src/main/resources/conf/application.properties.example)
     - Run the server using provided script: `bash run.sh`
     - The debezium server with databend will be started
-> NOTE: Due to the integration of Debezium Engine, full-load reading phase does not support checkpoint. After a failure, it needs to be re-read.
 
 # Contributing
 
