@@ -154,7 +154,8 @@
     <orderEntry type="library" name="Maven: io.debezium:debezium-scripting:1.9.7.Final" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.groovy:groovy:3.0.15" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.groovy:groovy-json:3.0.15" level="project" />
-    <orderEntry type="library" name="Maven: com.databend:databend-jdbc:0.0.9" level="project" />
+    <orderEntry type="library" name="Maven: com.databend:databend-jdbc:0.1.0" level="project" />
+    <orderEntry type="library" name="Maven: com.solidfire.code.gson:gson:2.6.2" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.groovy:groovy-jsr223:3.0.15" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-dbcp2:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-pool2:2.10.0" level="project" />
