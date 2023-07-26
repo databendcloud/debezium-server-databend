@@ -89,6 +89,12 @@ debezium.transforms.unwrap.delete.handling.mode=rewrite
 debezium.transforms.unwrap.drop.tombstones=true
 
 # ############ SET LOG LEVELS ############
-quarkus.log.level=INFO
+quarkus.log.console.json=true
 # Ignore messages below warning level from Jetty, because it's a bit verbose
 quarkus.log.category."org.eclipse.jetty".level=WARN
+quarkus.log.file.path=./logs/debezium.log
+quarkus.log.file.rotation.max-file-size=5M
+quarkus.log.file.rotation.file-suffix=.yyyy-MM-dd.gz
+quarkus.log.file.rotation.max-backup-index=3
+quarkus.log.level=WARN
+quarkus.log.file.enable=true
