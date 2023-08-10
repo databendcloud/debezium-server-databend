@@ -59,7 +59,6 @@ public class UpsertTableWriter extends BaseTableWriter {
             connection.setAutoCommit(false);
 
             for (DatabendChangeEvent event : events) {
-                System.out.println(event.operation());
                 // NOTE: if upsertKeepDeletes = true, delete event data will insert into target table
                 if (upsertKeepDeletes || !event.operation().equals("d")) {
                     Map<String, Object> values = event.valueAsMap();

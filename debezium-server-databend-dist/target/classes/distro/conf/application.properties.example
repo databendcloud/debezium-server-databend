@@ -51,3 +51,4 @@ quarkus.log.file.rotation.file-suffix=.yyyy-MM-dd.gz
 quarkus.log.file.rotation.max-backup-index=3
 quarkus.log.level=WARN
 quarkus.log.file.enable=true
+quarkus.http.port=8080
