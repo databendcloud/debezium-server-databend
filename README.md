@@ -21,6 +21,15 @@ The detail introduction docs available in [docs page](./docs/docs.md)
     - Run the server using provided script: `bash run.sh`
     - The debezium server with databend will be started
 
+# Install from release
+- Download zip file from [release](https://github.com/databendcloud/debezium-server-databend/releases)
+- Unzip it
+- Create `application.properties` file and config it: `nano conf/application.properties`, you can check the example
+    configuration
+    in [application.properties.example](debezium-server-databend-sink/src/main/resources/conf/application.properties.example)
+- Run the server using provided script: `bash run.sh`
+- The debezium server with databend will be started
+
 # Contributing
 
 You are warmly welcome to hack on debezium-server-databend. We have prepared a guide [CONTRIBUTING.md](./CONTRIBUTING.md).
