@@ -29,6 +29,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
@@ -187,6 +188,8 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     public void handleBatch(List<ChangeEvent<Object, Object>> records, DebeziumEngine.RecordCommitter<ChangeEvent<Object, Object>> committer)
             throws InterruptedException {
         Instant start = Instant.now();
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LOGGER.info("当前时间是：{}", currentDateTime);
 
         //group events by destination
         Map<String, List<DatabendChangeEvent>> result =
@@ -195,9 +198,9 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
                                 -> {
                             try {
                                 return new DatabendChangeEvent(e.destination(),
-                                        valDeserializer.deserialize(e.destination(), getBytes(e.value())),
+                                        e.value() == null ? null : valDeserializer.deserialize(e.destination(), getBytes(e.value())),
                                         e.key() == null ? null : valDeserializer.deserialize(e.destination(), getBytes(e.key())),
-                                        mapper.readTree(getBytes(e.value())).get("schema"),
+                                        e.value() == null ? null : mapper.readTree(getBytes(e.value())).get("schema"),
                                         e.key() == null ? null : mapper.readTree(getBytes(e.key())).get("schema")
                                 );
                             } catch (IOException ex) {
@@ -206,11 +209,16 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
                         })
                         .collect(Collectors.groupingBy(DatabendChangeEvent::destination));
 
+        long startTime = System.nanoTime();
         // consume list of events for each destination table
         for (Map.Entry<String, List<DatabendChangeEvent>> tableEvents : result.entrySet()) {
             RelationalTable tbl = this.getDatabendTable(mapDestination(tableEvents.getKey()), tableEvents.getValue().get(0).schema());
             tableWriter.addToTable(tbl, tableEvents.getValue());
         }
+        long endTime = System.nanoTime();
+        long elapsedTime = endTime - startTime;
+        double elapsedTimeInMilliseconds = (double) elapsedTime / 1_000_000;
+        LOGGER.info("当前批次 {} 行 写入 databend 时间: {} 毫秒", records.size(), elapsedTimeInMilliseconds);
 
         for (ChangeEvent<Object, Object> record : records) {
             LOGGER.trace("Processed event '{}'", record);
