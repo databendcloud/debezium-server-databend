@@ -19,7 +19,7 @@ debezium.format.key=json
 # mysql source, related docs: https://docs.confluent.io/kafka-connectors/debezium-mysql-source/current/mysql_source_connector_config.html
 debezium.source.connector.class=io.debezium.connector.mysql.MySqlConnector
 debezium.source.offset.storage.file.filename=data/offsets.dat
-debezium.source.offset.flush.interval.ms=60000
+debezium.source.offset.flush.interval.ms=10
 
 debezium.source.database.hostname=127.0.0.1
 debezium.source.database.port=3306
@@ -33,13 +33,17 @@ debezium.source.include.schema.changes=false
 # Run without Kafka, use local file to store checkpoints
 debezium.source.database.history=io.debezium.relational.history.FileDatabaseHistory
 debezium.source.database.history.file.filename=data/status.dat
-# do event flattening. unwrap message! delete mode must open there conf
+# do event flattening. unwrap message!
+# https://debezium.io/documentation/reference/1.2/configuration/event-flattening.html#extract-new-record-state-drop-tombstones
 debezium.transforms=unwrap
 debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
 #debezium.transforms.unwrap.add.fields=op,table,source.ts_ms,db
-debezium.transforms.unwrap.delete.handling.mode=rewrite
-# make tombstones as true to soft delete
-debezium.transforms.unwrap.drop.tombstones=true
+# soft delete
+#debezium.transforms.unwrap.delete.handling.mode=rewrite
+#debezium.transforms.unwrap.drop.tombstones=false
+# hard delete
+debezium.transforms.unwrap.delete.handling.mode=none
+debezium.transforms.unwrap.drop.tombstones=false
 
 # ############ SET LOG LEVELS ############
 quarkus.log.console.json=true

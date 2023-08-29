@@ -82,11 +82,16 @@ debezium.source.decimal.handling.mode=double
 #debezium.source.include.schema.changes=false
 
 # do event flattening. unwrap message!
+# https://debezium.io/documentation/reference/1.2/configuration/event-flattening.html#extract-new-record-state-drop-tombstones
 debezium.transforms=unwrap
 debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
-debezium.transforms.unwrap.add.fields=op,table,source.ts_ms,db
-debezium.transforms.unwrap.delete.handling.mode=rewrite
-debezium.transforms.unwrap.drop.tombstones=true
+#debezium.transforms.unwrap.add.fields=op,table,source.ts_ms,db
+# soft delete
+#debezium.transforms.unwrap.delete.handling.mode=rewrite
+#debezium.transforms.unwrap.drop.tombstones=false
+# hard delete
+debezium.transforms.unwrap.delete.handling.mode=none
+debezium.transforms.unwrap.drop.tombstones=false
 
 # ############ SET LOG LEVELS ############
 quarkus.log.console.json=true

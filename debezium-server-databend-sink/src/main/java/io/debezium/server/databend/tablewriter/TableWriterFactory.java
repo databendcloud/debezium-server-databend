@@ -10,7 +10,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class TableWriterFactory {
     @ConfigProperty(name = "debezium.sink.databend.upsert", defaultValue = "true")
     boolean upsert;
-    @ConfigProperty(name = "debezium.sink.databend.upsert-keep-deletes", defaultValue = "true")
+    @ConfigProperty(name = "debezium.sink.databend.upsert-keep-deletes", defaultValue = "false")
     boolean upsertKeepDeletes;
 
     @ConfigProperty(name = "debezium.sink.databend.identifier-quote-char", defaultValue = "")

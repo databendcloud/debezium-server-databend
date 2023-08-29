@@ -59,8 +59,10 @@ public class UpsertTableWriter extends BaseTableWriter {
             connection.setAutoCommit(false);
 
             for (DatabendChangeEvent event : events) {
-                // NOTE: if upsertKeepDeletes = true, delete event data will insert into target table
-                if (upsertKeepDeletes || !event.operation().equals("d")) {
+                if (event.valueAsMap() == null) {
+                    deleteEvents.add(event);
+                } else if (upsertKeepDeletes || !event.operation().equals("d")) {
+                    // NOTE: if upsertKeepDeletes = true, delete event data will insert into target table
                     Map<String, Object> values = event.valueAsMap();
                     addParametersToStatement(statement, values, event.keyAsMap());
                     statement.addBatch();
@@ -73,7 +75,6 @@ public class UpsertTableWriter extends BaseTableWriter {
 
             int[] batchResult = statement.executeBatch();
             inserts = Arrays.stream(batchResult).sum();
-            System.out.println(String.format("insert rows %d", inserts));
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -91,7 +92,7 @@ public class UpsertTableWriter extends BaseTableWriter {
 
     public void deleteFromTable(final RelationalTable table, final List<DatabendChangeEvent> events) throws Exception {
         for (DatabendChangeEvent event : events) {
-            Map<String, Object> values = event.valueAsMap();
+            Map<String, Object> values = event.keyAsMap();
             String deleteSql = table.preparedDeleteStatement(this.identifierQuoteCharacter, getPrimaryKeyValue(table.primaryKey, values));
             try (PreparedStatement statement = connection.prepareStatement(deleteSql)) {
                 System.out.println(deleteSql);
