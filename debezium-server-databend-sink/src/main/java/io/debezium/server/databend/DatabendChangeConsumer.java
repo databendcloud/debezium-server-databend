@@ -189,7 +189,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
             throws InterruptedException {
         Instant start = Instant.now();
         LocalDateTime currentDateTime = LocalDateTime.now();
-        LOGGER.info("当前时间是：{}", currentDateTime);
+        LOGGER.info("current time：{}", currentDateTime);
 
         //group events by destination
         Map<String, List<DatabendChangeEvent>> result =
@@ -218,7 +218,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
         long endTime = System.nanoTime();
         long elapsedTime = endTime - startTime;
         double elapsedTimeInMilliseconds = (double) elapsedTime / 1_000_000;
-        LOGGER.info("当前批次 {} 行 写入 databend 时间: {} 毫秒", records.size(), elapsedTimeInMilliseconds);
+        LOGGER.info("current record size: {} time write into databend: {} ms", records.size(), elapsedTimeInMilliseconds);
 
         for (ChangeEvent<Object, Object> record : records) {
             LOGGER.trace("Processed event '{}'", record);

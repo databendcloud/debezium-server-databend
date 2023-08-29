@@ -33,7 +33,9 @@ By default, Debezium Databend consumer is running with upsert mode `debezium.sin
 Upsert mode must set Primary Key `debezium.sink.databend.database.primaryKey` and does upsert on target table. For the tables without
 Primary Key consumer falls back to append mode.
 
-> NOTE: If in upsert mode, user must add the `__deleted` field in target databend table, and now we softly delete by make `__deleted` as true.
+> NOTE: If in upsert mode, `debezium-server-databend` support two kind of delete mode:
+> 1. `hard delete`: In hard delete mode, add `debezium.transforms.unwrap.delete.handling.mode=none`, `debezium.transforms.unwrap.drop.tombstones=false` in config file. Because Debezium generates a tombstone record for each DELETE operation. The default behavior is that ExtractNewRecordState removes tombstone records from the stream. To keep tombstone records in the stream, specify drop.tombstones=false.
+> 2. `soft delete`: In soft delete mode, user must add the `__deleted` field in target databend table, and add `debezium.transforms.unwrap.delete.handling.mode=rewrite`, `debezium.transforms.unwrap.drop.tombstones=true` in config file. So now we softly delete by make `__deleted` as true.
 
 ### Append mode
 
