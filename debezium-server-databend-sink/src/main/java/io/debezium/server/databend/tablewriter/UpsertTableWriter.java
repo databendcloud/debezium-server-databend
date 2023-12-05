@@ -11,7 +11,7 @@ package io.debezium.server.databend.tablewriter;
 import io.debezium.server.databend.DatabendChangeEvent;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
+import java.sql.*;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

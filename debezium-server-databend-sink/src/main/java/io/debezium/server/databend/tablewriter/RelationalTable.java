@@ -42,12 +42,12 @@ public class RelationalTable {
                 int numTablesFound = 0;
                 if (tables != null && tables.next()) {
                     numTablesFound++;
-                    String catalog = tables.getString("TABLE_CAT");
+//                    String catalog = tables.getString("TABLE_CAT");
                     String schema = tables.getString("TABLE_SCHEM");
                     String table = tables.getString("TABLE_NAME");
 
                     // get table Columns
-                    try (ResultSet tColumns = meta.getColumns(catalog, schema, tableName, null)) {
+                    try (ResultSet tColumns = meta.getColumns(null, schema, tableName, null)) {
                         while (tColumns.next()) {
                             String columnName = tColumns.getString("COLUMN_NAME");
                             DatabendRawType databendRawType = new DatabendRawType(columnName);
@@ -59,7 +59,7 @@ public class RelationalTable {
                     if (!primaryKey.isEmpty()) {
                         primaryKeysMap.put(primaryKey, 1);
                     }
-                    LOGGER.warn("Loaded Databend table {}.{}.{} \nColumns:{} \nPK:{}", catalog, schema, table, columns, primaryKeysMap);
+                    LOGGER.warn("Loaded Databend table {}.{} \nColumns:{} \nPK:{}",  schema, table, columns, primaryKeysMap);
                 }
 
                 if (numTablesFound == 0) {
