@@ -131,6 +131,25 @@ Or if user don't like this kind of table name mapping, just use `debezium.sink.d
 
 [Detailed documentation](https://github.com/databendcloud/databend-jdbc/blob/main/docs/Connection.md) about how to use connection parameters in a Databend jdbc connection.
 
+### Special type convert
+#### Decimal types
+Debezium connectors handle decimals according to the setting of the decimal.handling.mode connector configuration property.
+Specifies how the connector should handle values for DECIMAL and NUMERIC columns:
+```properties
+# precise (the default) represents them precisely using java.math.BigDecimal values represented in change events in a binary form.
+decimal.handling.mode=precise
+```
+
+```properties
+# string encodes values as formatted strings, which is easy to consume but semantic information about the real type is lost.
+decimal.handling.mode=string
+```
+
+```properties
+# double converts values to approximate double-precision floating-point values.
+decimal.handling.mode=double
+```
+
 ### Example Configuration
 
 Read [application.properties.example](../debezium-server-databend-sink/src/main/resources/conf/application.properties.example)
