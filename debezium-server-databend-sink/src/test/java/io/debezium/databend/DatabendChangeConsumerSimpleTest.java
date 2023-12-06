@@ -16,9 +16,11 @@ import io.debezium.server.databend.DatabendChangeConsumer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,6 +34,17 @@ import java.util.List;
 public class DatabendChangeConsumerSimpleTest extends BaseDbTest {
     @Inject
     DatabendChangeConsumer consumer;
+    public static Connection connection;
+
+    @BeforeAll
+    static void beforeAll() throws Exception {
+        // CREATE TES TABLE USING JOOQ
+        TargetDatabendDB targetDatabendDB = new TargetDatabendDB();
+        targetDatabendDB.start();
+
+        connection = targetDatabendDB.createConnection();
+        connection.createStatement().execute("CREATE DATABASE if not exists " + targetDatabendDB.DB_DATABASE);
+    }
 
     @Test
     public void testSimpleUpload() throws Exception {

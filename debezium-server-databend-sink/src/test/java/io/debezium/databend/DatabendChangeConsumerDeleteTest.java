@@ -18,11 +18,10 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import org.jooq.meta.derby.sys.Sys;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.inject.Inject;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -39,6 +38,16 @@ import java.util.Map;
 public class DatabendChangeConsumerDeleteTest extends BaseDbTest {
     @Inject
     DatabendChangeConsumer consumer;
+    public static Connection connection;
+    @BeforeAll
+    static void beforeAll() throws Exception {
+        // CREATE TES TABLE USING JOOQ
+        TargetDatabendDB targetDatabendDB = new TargetDatabendDB();
+        targetDatabendDB.start();
+
+        connection = targetDatabendDB.createConnection();
+        connection.createStatement().execute("CREATE DATABASE if not exists " + targetDatabendDB.DB_DATABASE);
+    }
 
     @Test
     public void testSimpleUpload() throws Exception {
@@ -78,10 +87,10 @@ public class DatabendChangeConsumerDeleteTest extends BaseDbTest {
         Assertions.assertEquals(getResultSetRowCount(rsUName), 1);
     }
 
-    @AfterEach
-    public void clearData() throws SQLException, ClassNotFoundException {
-        ResultSet rs = select("delete from public.debeziumcdc_customers_delete");
-    }
+//    @AfterEach
+//    public void clearData() throws SQLException, ClassNotFoundException {
+//        ResultSet rs = select("Drop database if exists public");
+//    }
 
     public static class DatabendChangeConsumerDeleteProfile implements QuarkusTestProfile {
 

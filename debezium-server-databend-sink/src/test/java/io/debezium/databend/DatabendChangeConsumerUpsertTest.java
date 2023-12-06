@@ -78,10 +78,11 @@ public class DatabendChangeConsumerUpsertTest extends BaseDbTest {
         Assertions.assertEquals(getResultSetRowCount(rsUName), 1);
     }
 
-    @AfterEach
-    public void clearData() throws SQLException, ClassNotFoundException {
-        ResultSet rs = select("delete from public.debeziumcdc_customers_upsert");
-    }
+//    @AfterEach
+//    public void clearData() throws SQLException, ClassNotFoundException {
+////        ResultSet rs = select("delete from public.debeziumcdc_customers_upsert");
+//        ResultSet rs = select("Drop database if exists public");
+//    }
 
     public static class DatabendChangeConsumerUpsertTestProfile implements QuarkusTestProfile {
 
