@@ -1,90 +1,51 @@
-# Use databend sink
 debezium.sink.type=databend
-debezium.sink.databend.upsert=true
+debezium.sink.databend.upsert=false
 debezium.sink.databend.upsert-keep-deletes=false
 debezium.sink.databend.database.databaseName=debezium
-debezium.sink.databend.table-prefix=debeziumcdc_
 debezium.sink.databend.database.url=jdbc:databend://localhost:8000
 debezium.sink.databend.database.username=databend
 debezium.sink.databend.database.password=databend
+debezium.sink.databend.database.primaryKey=id
+#debezium.sink.databend.database.tableName=products
+debezium.sink.databend.database.param.ssl=false
 # additional databend parameters
-debezium.sink.databend.database.param.key=val # replace the key and val using custom
 
-# Run without Kafka, use local file to store checkpoints
-debezium.source.database.history=io.debezium.relational.history.FileDatabaseHistory
-debezium.source.database.history.file.filename=data/status.dat
-
-# Databend sink config
-
-# enable event schemas - mandate
+# enable event schemas
 debezium.format.value.schemas.enable=true
 debezium.format.key.schemas.enable=true
 debezium.format.value=json
 debezium.format.key=json
 
-
-# mysql source, related docs: https://docs.confluent.io/kafka-connectors/debezium-mysql-source/current/mysql_source_connector_config.html
+# mysql source
 debezium.source.connector.class=io.debezium.connector.mysql.MySqlConnector
 debezium.source.offset.storage.file.filename=data/offsets.dat
 debezium.source.offset.flush.interval.ms=60000
 
-debezium.source.database.hostname=127.0.0.1
+debezium.source.database.hostname=localhost
 debezium.source.database.port=3306
-debezium.source.database.user=mysqlUser
-debezium.source.database.password=mysqlPassword
-debezium.source.database.dbname=mydb
-debezium.source.database.server.name=serverName
+debezium.source.database.user=root
+#debezium.source.database.password=123456
+debezium.source.database.server.name=from_mysql
 debezium.source.include.schema.changes=false
-# debezium.source.table.include.list=databaseName.tableName
+debezium.source.database.whitelist=mydb
+#debezium.source.table.include.list=mydb.products
+debezium.source.max.batch.size=200000
+debezium.source.max.queue.size=800000
+debezium.source.decimal.handling.mode=precise
 # debezium.source.database.ssl.mode=required
 # Run without Kafka, use local file to store checkpoints
 debezium.source.database.history=io.debezium.relational.history.FileDatabaseHistory
 debezium.source.database.history.file.filename=data/status.dat
-# do event flattening. unwrap message! delete mode must open there conf
-debezium.transforms=unwrap
-debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
-#debezium.transforms.unwrap.add.fields=op,table,source.ts_ms,db
-debezium.transforms.unwrap.delete.handling.mode=rewrite
-# make tombstones as true to soft delete
-debezium.transforms.unwrap.drop.tombstones=true
-
-# false = ("op": "r") AND true = ("op": "c")
-debezium.source.snapshot.events.as.inserts=false
-
-# when decimal.handling.mode configuration property is set to double, then the connector will represent
-# all DECIMAL and NUMERIC values as Java double values and encodes them as follows:
-debezium.source.decimal.handling.mode=double
-
-# postgres source
-#debezium.source.connector.class=io.debezium.connector.postgresql.PostgresConnector
-#debezium.source.offset.storage.file.filename=data/offsets.dat
-#debezium.source.offset.flush.interval.ms=0
-#debezium.source.database.hostname=localhost
-#debezium.source.database.port=5432
-#debezium.source.database.user=postgres
-#debezium.source.database.password=postgres
-#debezium.source.database.dbname=postgres
-#debezium.source.database.server.name=tutorial
-#debezium.source.schema.include.list=inventory
-
-# sql server source
-#debezium.source.connector.class=io.debezium.connector.sqlserver.SqlServerConnector
-#debezium.source.offset.storage.file.filename=data/offsets.dat
-#debezium.source.offset.flush.interval.ms=0
-#debezium.source.database.hostname=localhost
-#debezium.source.database.port=5432
-#debezium.source.database.user=debezium
-#debezium.source.database.password=debezium
-#debezium.source.database.dbname=debezium
-#debezium.source.database.server.name=tutorial
-#debezium.source.schema.include.list=inventory
-# mandate for sql server source, avoid error when snapshot and schema change
-#debezium.source.include.schema.changes=false
-
 # do event flattening. unwrap message!
 # https://debezium.io/documentation/reference/1.2/configuration/event-flattening.html#extract-new-record-state-drop-tombstones
-debezium.transforms=unwrap
+debezium.transforms=unwrap,a
 debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
+debezium.transforms.a.type=org.apache.kafka.connect.transforms.TimestampConverter$Value
+debezium.transforms.a.target.type=string
+debezium.transforms.a.field=a
+# datetime format
+debezium.transforms.a.format=yyyy-MM-dd
+debezium.source.time.precision.mode=connect
 #debezium.transforms.unwrap.add.fields=op,table,source.ts_ms,db
 # soft delete
 #debezium.transforms.unwrap.delete.handling.mode=rewrite
@@ -101,5 +62,5 @@ quarkus.log.file.path=./logs/debezium.log
 quarkus.log.file.rotation.max-file-size=5M
 quarkus.log.file.rotation.file-suffix=.yyyy-MM-dd.gz
 quarkus.log.file.rotation.max-backup-index=3
-quarkus.log.level=WARN
+quarkus.log.level=INFO
 quarkus.log.file.enable=true

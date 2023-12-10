@@ -10,6 +10,8 @@ package io.debezium.server.databend.tablewriter;
 
 import io.debezium.server.databend.DatabendChangeEvent;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.*;
 import java.sql.SQLException;
@@ -18,8 +20,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
+import io.debezium.server.databend.DatabendUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static io.debezium.server.databend.DatabendUtil.addParametersToStatement;
 
 
 public class UpsertTableWriter extends BaseTableWriter {
@@ -60,8 +65,7 @@ public class UpsertTableWriter extends BaseTableWriter {
                     deleteEvents.add(event);
                 } else if (upsertKeepDeletes || !event.operation().equals("d")) {
                     // NOTE: if upsertKeepDeletes = true, delete event data will insert into target table
-                    Map<String, Object> values = event.valueAsMap();
-                    addParametersToStatement(statement, values, event.keyAsMap());
+                    addParametersToStatement(statement, event);
                     statement.addBatch();
                 } else if (event.operation().equals("d")) {
                     // here use soft delete
@@ -100,14 +104,6 @@ public class UpsertTableWriter extends BaseTableWriter {
         }
     }
 
-    private void addParametersToStatement(PreparedStatement statement, Map<String, Object> parameters, Map<String, Object> keys) throws SQLException {
-        int index = 1;
-        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-            Object value = entry.getValue();
-            statement.setObject(index, value);
-            index++;
-        }
-    }
 
     private String getPrimaryKeyValue(String primaryKey, Map<String, Object> parameters) throws Exception {
         String primaryValue = "";

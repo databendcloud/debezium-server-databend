@@ -24,6 +24,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import static io.debezium.server.databend.DatabendUtil.addParametersToStatement;
+
 public abstract class BaseTableWriter {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(BaseTableWriter.class);
@@ -38,34 +40,10 @@ public abstract class BaseTableWriter {
     public void addToTable(final RelationalTable table, final List<DatabendChangeEvent> events) {
         final String sql = table.prepareInsertStatement(this.identifierQuoteCharacter);
         int inserts = 0;
-
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             connection.setAutoCommit(false);
-
             for (DatabendChangeEvent event : events) {
-                Map<String, Object> values = event.valueAsMap();
-                DatabendChangeEvent.Schema k = event.schema();
-                Map<String, String> decimalFields = DatabendUtil.findDecimalFields(event.schema());
-                int index = 1;
-                for (String key : values.keySet()) {
-                    if (decimalFields.containsKey(key)) {
-                        Object value = values.get(key);
-                        if (value instanceof byte[]) {
-                            // If the value is a byte array, decode it
-                            final BigDecimal decoded = new BigDecimal(new BigInteger((byte[]) value), Integer.parseInt(decimalFields.get(key)));
-                            statement.setObject(index++, decoded);
-                        } else if (value instanceof String) {
-                            // If the value is a string, parse it to BigDecimal
-                            byte[] byteArray = Base64.getDecoder().decode(value.toString());
-                            final BigDecimal decoded = new BigDecimal(new BigInteger(byteArray), Integer.parseInt(decimalFields.get(key)));
-                            statement.setObject(index++, decoded);
-                        }
-                    } else {
-                        System.out.println("ssss");
-                        System.out.println(values.get(key));
-                        statement.setObject(index++, values.get(key));
-                    }
-                }
+                addParametersToStatement(statement, event);
                 statement.addBatch();
 
                 int[] batchResult = statement.executeBatch();

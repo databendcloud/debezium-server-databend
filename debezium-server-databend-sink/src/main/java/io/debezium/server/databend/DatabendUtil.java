@@ -23,8 +23,10 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.literal.NamedLiteral;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.*;
 import java.sql.SQLException;
 import java.sql.SQLType;
 import java.util.*;
@@ -195,6 +197,30 @@ public class DatabendUtil {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public static void addParametersToStatement(PreparedStatement statement, DatabendChangeEvent event) throws SQLException {
+        Map<String, Object> values = event.valueAsMap();
+        //DatabendChangeEvent.Schema k = event.schema();
+        Map<String, String> decimalFields = DatabendUtil.findDecimalFields(event.schema());
+        int index = 1;
+        for (String key : values.keySet()) {
+            if (decimalFields.containsKey(key)) {
+                Object value = values.get(key);
+                if (value instanceof byte[]) {
+                    // If the value is a byte array, decode it
+                    final BigDecimal decoded = new BigDecimal(new BigInteger((byte[]) value), Integer.parseInt(decimalFields.get(key)));
+                    statement.setObject(index++, decoded);
+                } else if (value instanceof String) {
+                    // If the value is a string, parse it to BigDecimal
+                    byte[] byteArray = Base64.getDecoder().decode(value.toString());
+                    final BigDecimal decoded = new BigDecimal(new BigInteger(byteArray), Integer.parseInt(decimalFields.get(key)));
+                    statement.setObject(index++, decoded);
+                }
+            } else {
+                statement.setObject(index++, values.get(key));
+            }
+        }
     }
 
     public static Map<String, String> findDecimalFields(DatabendChangeEvent.Schema schema) {

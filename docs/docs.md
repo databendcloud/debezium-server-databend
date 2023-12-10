@@ -150,6 +150,21 @@ decimal.handling.mode=string
 decimal.handling.mode=double
 ```
 
+#### DateTime types
+Convert timestamps between different formats such as Unix epoch, strings, and Connect Date/Timestamp types. Applies to individual fields or to the entire value.
+Use the concrete transformation type designed for the record key (`org.apache.kafka.connect.transforms.TimestampConverter$Key`) or value (`org.apache.kafka.connect.transforms.TimestampConverter$Value`).
+
+##### Examples
+This configuration snippet shows how to use `TimestampConverter` to transform a Unix epoch (represented as an int64 value) into a formatted date string.
+
+```properties
+debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
+debezium.transforms.a.type=org.apache.kafka.connect.transforms.TimestampConverter$Value
+debezium.transforms.a.target.type=string
+debezium.transforms.a.field=a
+debezium.transforms.a.format=yyyy-MM-dd hh:mm:ss
+```
+
 ### Example Configuration
 
 Read [application.properties.example](../debezium-server-databend-sink/src/main/resources/conf/application.properties.example)
