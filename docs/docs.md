@@ -164,6 +164,8 @@ debezium.transforms.a.target.type=string
 debezium.transforms.a.field=a
 debezium.transforms.a.format=yyyy-MM-dd hh:mm:ss
 ```
+**NOTE:**
+If your table has `timestamp` or `datetime` type, you need to create your target table in databend manually. Because debezium will convert `timestamp` or `datetime` type to `string` type.
 
 ### Example Configuration
 

@@ -171,11 +171,13 @@ public class DatabendUtil {
          */
         Map<String, DataType<?>> fl = DatabendUtil.fields(schema.valueSchema());
         List<Field<?>> fields = new ArrayList<>();
+//        System.out.println("valueSchema: " + schema.valueSchema());
 
 //        fl.forEach((k, v) -> fields.add(DSL.field(DSL.name(k), v)));
         for (Map.Entry<String, DataType<?>> entry : fl.entrySet()) {
             String k = entry.getKey();
             DataType<?> dataType = entry.getValue();
+//            System.out.println("k: " + k + ", v: " + dataType);
 
             if (dataType.toString().contains("decimal")) {
                 DataType<BigDecimal> decimalType = (DataType<BigDecimal>) dataType;
