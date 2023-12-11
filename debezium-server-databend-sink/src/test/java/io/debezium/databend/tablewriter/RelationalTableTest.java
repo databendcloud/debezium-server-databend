@@ -14,7 +14,6 @@ import io.debezium.DebeziumException;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.Optional;
 
 import io.debezium.databend.testresources.TargetDatabendDB;
 import com.mongodb.assertions.Assertions;
@@ -77,7 +76,7 @@ class RelationalTableTest {
     @Test
     void experiment() throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM tbl_with_pk");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM public.tbl_with_pk");
 
             // 处理结果集
             while (resultSet.next()) {

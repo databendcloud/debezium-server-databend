@@ -11,6 +11,7 @@ package io.debezium.server.databend;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.debezium.DebeziumException;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.kafka.connect.data.Decimal;
 import org.eclipse.microprofile.config.Config;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -21,9 +22,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.literal.NamedLiteral;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.*;
 import java.sql.SQLException;
+import java.sql.SQLType;
 import java.util.*;
 import java.util.LinkedHashMap;
 
@@ -100,7 +105,7 @@ public class DatabendUtil {
                     //fields.put(fieldName, subSchema);
                     break;
                 default: //primitive types
-                    fields.put(fieldName, fieldType(fieldType));
+                    fields.put(fieldName, fieldType(jsonSchemaFieldNode, fieldType));
                     break;
             }
         }
@@ -108,13 +113,19 @@ public class DatabendUtil {
         return fields;
     }
 
-    private static DataType<?> fieldType(String fieldType) {
+    private static DataType<?> fieldType(JsonNode jsonSchemaFieldNode, String fieldType) {
         switch (fieldType) {
             case "int8":
             case "int16":
             case "int32": // int 4 bytes
                 return SQLDataType.BIGINT;
             case "int64": // long 8 bytes
+                if (jsonSchemaFieldNode.get("name") != null) {
+                    String debeziumTypeName = jsonSchemaFieldNode.get("name").textValue();
+                    if (debeziumTypeName.toLowerCase().contains("timestamp")) {
+                        return SQLDataType.TIMESTAMP;
+                    }
+                }
                 return SQLDataType.BIGINT;
             case "float8":
             case "float16":
@@ -127,6 +138,18 @@ public class DatabendUtil {
             case "string":
                 return SQLDataType.VARCHAR;
             case "bytes":
+                if (jsonSchemaFieldNode.get("name") != null) {
+                    String debeziumTypeName = jsonSchemaFieldNode.get("name").textValue();
+                    if (debeziumTypeName.toLowerCase().contains("decimal")) {
+                        JsonNode decimalParameters = jsonSchemaFieldNode.get("parameters");
+                        if (decimalParameters != null && decimalParameters.has("scale")
+                                && decimalParameters.has("connect.decimal.precision")) {
+                            int scale = decimalParameters.get("scale").intValue();
+                            int precision = decimalParameters.get("connect.decimal.precision").intValue();
+                            return SQLDataType.DECIMAL(precision, scale);
+                        }
+                    }
+                }
                 return SQLDataType.BINARY;
             default:
                 // default to String type
@@ -139,13 +162,35 @@ public class DatabendUtil {
     public static void createTable(String schemaName, String tableName, Connection conn, DatabendChangeEvent.Schema schema,
                                    boolean upsert) {
         DSLContext create = DSL.using(conn);
+        /*schema.valueSchema():
+        {"type":"struct","fields":[
+        {"type":"int32","optional":false,"field":"id"},
+        {"type":"int64","optional":true,"name":"io.debezium.time.Timestamp","version":1,"field":"a"},
+        {"type":"bytes","optional":true,"name":"org.apache.kafka.connect.data.Decimal","version":1,"parameters":{"scale":"2","connect.decimal.precision":"10"},"field":"b"}],
+        "optional":false,"name":"from_mysql.mydb.ddd.Value"}
+         */
         Map<String, DataType<?>> fl = DatabendUtil.fields(schema.valueSchema());
         List<Field<?>> fields = new ArrayList<>();
 
-        fl.forEach((k, v) -> fields.add(DSL.field(DSL.name(k), v)));
+//        fl.forEach((k, v) -> fields.add(DSL.field(DSL.name(k), v)));
+        for (Map.Entry<String, DataType<?>> entry : fl.entrySet()) {
+            String k = entry.getKey();
+            DataType<?> dataType = entry.getValue();
+
+            if (dataType.toString().contains("decimal")) {
+                DataType<BigDecimal> decimalType = (DataType<BigDecimal>) dataType;
+                int precision = decimalType.precision();
+                int scale = decimalType.scale();
+
+                // Create a Decimal field
+                fields.add(DSL.field(DSL.name(k), dataType.precision(precision, scale)));
+            } else {
+                fields.add(DSL.field(DSL.name(k), dataType));
+            }
+        }
         try (CreateTableConstraintStep sql = create.createTable(tableName)
                 .columns(fields)) {
-            String createTableSQL = createTableSQL(schemaName, sql.getSQL());
+            String createTableSQL = createTableSQL(schemaName, sql.getSQL(), schema);
             LOGGER.warn("Creating table:\n{}", createTableSQL);
             conn.createStatement().execute(createTableSQL);
         } catch (SQLException e) {
@@ -154,12 +199,81 @@ public class DatabendUtil {
 
     }
 
-    private static String createTableSQL(String schemaName, String originalSQL) {
+    public static void addParametersToStatement(PreparedStatement statement, DatabendChangeEvent event) throws SQLException {
+        Map<String, Object> values = event.valueAsMap();
+        //DatabendChangeEvent.Schema k = event.schema();
+        Map<String, String> decimalFields = DatabendUtil.findDecimalFields(event.schema());
+        int index = 1;
+        for (String key : values.keySet()) {
+            if (decimalFields.containsKey(key)) {
+                Object value = values.get(key);
+                if (value instanceof byte[]) {
+                    // If the value is a byte array, decode it
+                    final BigDecimal decoded = new BigDecimal(new BigInteger((byte[]) value), Integer.parseInt(decimalFields.get(key)));
+                    statement.setObject(index++, decoded);
+                } else if (value instanceof String) {
+                    // If the value is a string, parse it to BigDecimal
+                    byte[] byteArray = Base64.getDecoder().decode(value.toString());
+                    final BigDecimal decoded = new BigDecimal(new BigInteger(byteArray), Integer.parseInt(decimalFields.get(key)));
+                    statement.setObject(index++, decoded);
+                }
+            } else {
+                statement.setObject(index++, values.get(key));
+            }
+        }
+    }
+
+    public static Map<String, String> findDecimalFields(DatabendChangeEvent.Schema schema) {
+        Map<String, String> decimalFields = new HashMap<>();
+        for (JsonNode jsonSchemaFieldNode : schema.valueSchema().get("fields")) {
+            // if the field is decimal, replace it with decimal(precision,scale)
+            String fieldName = jsonSchemaFieldNode.get("field").textValue();
+            if (jsonSchemaFieldNode.get("type").textValue().equals("bytes")) {
+                if (jsonSchemaFieldNode.get("name") != null) {
+                    String debeziumTypeName = jsonSchemaFieldNode.get("name").textValue();
+                    if (debeziumTypeName.toLowerCase().contains("decimal")) {
+                        JsonNode decimalParameters = jsonSchemaFieldNode.get("parameters");
+                        if (decimalParameters != null && decimalParameters.has("scale")
+                                && decimalParameters.has("connect.decimal.precision")) {
+                            String scale = decimalParameters.get("scale").textValue();
+                            String precision = decimalParameters.get("connect.decimal.precision").textValue();
+                            decimalFields.put(fieldName, scale);
+                        }
+                    }
+                }
+            }
+        }
+        return decimalFields;
+    }
+
+    private static String createTableSQL(String schemaName, String originalSQL, DatabendChangeEvent.Schema schema) {
         //"CREATE TABLE debeziumcdc_customers_append (__deleted boolean, id bigint, first_name varchar, __op varchar, __source_ts_ms bigint);";
         String[] parts = originalSQL.split("\\s", 4);
         parts[2] = schemaName + "." + parts[2];
 
         String modifiedSQL = String.join(" ", parts);
+        // replace `decimal` with `decimal(precision,scale)` by handling schema.valueSchema()
+        for (JsonNode jsonSchemaFieldNode : schema.valueSchema().get("fields")) {
+            // if the field is decimal, replace it with decimal(precision,scale)
+            String fieldName = jsonSchemaFieldNode.get("field").textValue();
+            if (jsonSchemaFieldNode.get("type").textValue().equals("bytes")) {
+                if (jsonSchemaFieldNode.get("name") != null) {
+                    String debeziumTypeName = jsonSchemaFieldNode.get("name").textValue();
+                    if (debeziumTypeName.toLowerCase().contains("decimal")) {
+                        JsonNode decimalParameters = jsonSchemaFieldNode.get("parameters");
+                        if (decimalParameters != null && decimalParameters.has("scale")
+                                && decimalParameters.has("connect.decimal.precision")) {
+                            String scale = decimalParameters.get("scale").textValue();
+                            String precision = decimalParameters.get("connect.decimal.precision").textValue();
+                            // the modifiedSQL is `create table debezium.\"from_mysql_mydb_ddd\" (\"id\" bigint, \"a\" timestamp, \"b\" decimal)`
+
+                            modifiedSQL = modifiedSQL.replace("\"" + fieldName + "\"" + " decimal", "\"" + fieldName + "\"" + " decimal(" + precision + "," + scale + ")");
+                        }
+                    }
+                }
+            }
+        }
+
         return modifiedSQL;
     }
 

@@ -131,6 +131,40 @@ Or if user don't like this kind of table name mapping, just use `debezium.sink.d
 
 [Detailed documentation](https://github.com/databendcloud/databend-jdbc/blob/main/docs/Connection.md) about how to use connection parameters in a Databend jdbc connection.
 
+### Special type convert
+#### Decimal types
+Debezium connectors handle decimals according to the setting of the decimal.handling.mode connector configuration property.
+Specifies how the connector should handle values for DECIMAL and NUMERIC columns:
+```properties
+# precise (the default) represents them precisely using java.math.BigDecimal values represented in change events in a binary form.
+decimal.handling.mode=precise
+```
+
+```properties
+# string encodes values as formatted strings, which is easy to consume but semantic information about the real type is lost.
+decimal.handling.mode=string
+```
+
+```properties
+# double converts values to approximate double-precision floating-point values.
+decimal.handling.mode=double
+```
+
+#### DateTime types
+Convert timestamps between different formats such as Unix epoch, strings, and Connect Date/Timestamp types. Applies to individual fields or to the entire value.
+Use the concrete transformation type designed for the record key (`org.apache.kafka.connect.transforms.TimestampConverter$Key`) or value (`org.apache.kafka.connect.transforms.TimestampConverter$Value`).
+
+##### Examples
+This configuration snippet shows how to use `TimestampConverter` to transform a Unix epoch (represented as an int64 value) into a formatted date string.
+
+```properties
+debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
+debezium.transforms.a.type=org.apache.kafka.connect.transforms.TimestampConverter$Value
+debezium.transforms.a.target.type=string
+debezium.transforms.a.field=a
+debezium.transforms.a.format=yyyy-MM-dd hh:mm:ss
+```
+
 ### Example Configuration
 
 Read [application.properties.example](../debezium-server-databend-sink/src/main/resources/conf/application.properties.example)
