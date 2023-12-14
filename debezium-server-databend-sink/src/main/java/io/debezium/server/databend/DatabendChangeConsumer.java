@@ -237,8 +237,11 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
         }
         final String getTableName = destination
                 .replaceAll(destinationRegexp.orElse(""), destinationRegexpReplace.orElse(""));
-        String[] parts = getTableName.split(".");
-        String tableName = parts[parts.length - 1];
-        return tablePrefix.orElse("") + tableName;
+        if (getTableName.contains(".")) {
+            String[] parts = getTableName.split(".");
+            String tableName = parts[parts.length - 1];
+            return tablePrefix.orElse("") + tableName;
+        }
+        return tablePrefix.orElse("") + getTableName;
     }
 }
