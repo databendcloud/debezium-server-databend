@@ -212,6 +212,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
         long startTime = System.nanoTime();
         // consume list of events for each destination table
         for (Map.Entry<String, List<DatabendChangeEvent>> tableEvents : result.entrySet()) {
+            System.out.println("tableEvents.getKey() is :" + tableEvents.getKey());
             RelationalTable tbl = this.getDatabendTable(mapDestination(tableEvents.getKey()), tableEvents.getValue().get(0).schema());
             tableWriter.addToTable(tbl, tableEvents.getValue());
         }
