@@ -171,13 +171,13 @@ public class DatabendUtil {
          */
         Map<String, DataType<?>> fl = DatabendUtil.fields(schema.valueSchema());
         List<Field<?>> fields = new ArrayList<>();
-//        System.out.println("valueSchema: " + schema.valueSchema());
+        System.out.println("valueSchema: " + schema.valueSchema());
 
 //        fl.forEach((k, v) -> fields.add(DSL.field(DSL.name(k), v)));
         for (Map.Entry<String, DataType<?>> entry : fl.entrySet()) {
             String k = entry.getKey();
             DataType<?> dataType = entry.getValue();
-//            System.out.println("k: " + k + ", v: " + dataType);
+            System.out.println("k: " + k + ", v: " + dataType);
 
             if (dataType.toString().contains("decimal")) {
                 DataType<BigDecimal> decimalType = (DataType<BigDecimal>) dataType;
@@ -205,6 +205,10 @@ public class DatabendUtil {
         Map<String, Object> values = event.valueAsMap();
         //DatabendChangeEvent.Schema k = event.schema();
         Map<String, String> decimalFields = DatabendUtil.findDecimalFields(event.schema());
+        System.out.println("valueSchema: " + event.schema.valueSchema());
+        System.out.println("keySchema: " + event.schema.keySchema());
+        System.out.println("valueAsMap"+event.valueAsMap());
+        System.out.println("keyAsMap"+event.keyAsMap());
         int index = 1;
         for (String key : values.keySet()) {
             if (decimalFields.containsKey(key)) {

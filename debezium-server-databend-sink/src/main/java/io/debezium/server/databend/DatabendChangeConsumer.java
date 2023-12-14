@@ -231,12 +231,15 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     }
 
     public String mapDestination(String destination) {
+        System.out.println("destination is :" + destination);
         if (tableName.isPresent()) {
             return tablePrefix.orElse("") + tableName.orElse("");
         }
         final String getTableName = destination
                 .replaceAll(destinationRegexp.orElse(""), destinationRegexpReplace.orElse(""))
                 .replace(".", "_");
-        return tablePrefix.orElse("") + getTableName;
+        String[] parts = getTableName.split("_");
+        String tableName = parts[parts.length - 1];
+        return tablePrefix.orElse("") + tableName;
     }
 }
