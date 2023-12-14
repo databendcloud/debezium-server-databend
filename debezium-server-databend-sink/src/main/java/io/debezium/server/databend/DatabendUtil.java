@@ -194,12 +194,12 @@ public class DatabendUtil {
         try (CreateTableConstraintStep sql = create.createTable(tableName)
                 .columns(fields)) {
             String createTableSQL = createTableSQL(schemaName, sql.getSQL(), schema);
-            LOGGER.warn("Creating table:\n{}", createTableSQL);
+            LOGGER.info("Creating table:\n{}", createTableSQL);
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute(createTableSQL);
-                LOGGER.warn("Created table:\n{}", createTableSQL);
+                LOGGER.info("Created table:\n{}", createTableSQL);
             } catch (Exception e) {
-                LOGGER.warn("Failed to create table:\n{}", createTableSQL);
+                LOGGER.error("Failed to create table:\n{}", createTableSQL);
                 throw e;
             }
         } catch (SQLException e) {
