@@ -191,7 +191,7 @@ public class DatabendUtil {
                 fields.add(DSL.field(DSL.name(k), dataType));
             }
         }
-        try (CreateTableConstraintStep sql = create.createTable(schemaName + "." + tableName)
+        try (CreateTableConstraintStep sql = create.createTable(tableName)
                 .columns(fields)) {
             String createTableSQL = createTableSQL(schemaName, sql.getSQL(), schema);
             LOGGER.warn("Creating table:\n{}", createTableSQL);
@@ -261,11 +261,11 @@ public class DatabendUtil {
 
     private static String createTableSQL(String schemaName, String originalSQL, DatabendChangeEvent.Schema schema) {
         //"CREATE TABLE debeziumcdc_customers_append (__deleted boolean, id bigint, first_name varchar, __op varchar, __source_ts_ms bigint);";
-//        String[] parts = originalSQL.split("\\s", 4);
-//        parts[2] = schemaName + "." + parts[2];
-
-//        String modifiedSQL = String.join(" ", parts);
-        String modifiedSQL = originalSQL;
+        String[] parts = originalSQL.split("\\s", 4);
+        parts[2] = schemaName + "." + parts[2];
+//
+        String modifiedSQL = String.join(" ", parts);
+//        String modifiedSQL = originalSQL;
         System.out.println("sjh" + modifiedSQL);
         // replace `decimal` with `decimal(precision,scale)` by handling schema.valueSchema()
         for (JsonNode jsonSchemaFieldNode : schema.valueSchema().get("fields")) {
