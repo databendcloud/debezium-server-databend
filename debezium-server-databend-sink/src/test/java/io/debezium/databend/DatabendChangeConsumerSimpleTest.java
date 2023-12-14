@@ -69,7 +69,7 @@ public class DatabendChangeConsumerSimpleTest extends BaseDbTest {
 
     @AfterEach
     public void clearData() throws SQLException, ClassNotFoundException {
-        ResultSet rs = select("delete from public.customers_append");
+        ResultSet rs = select("delete from public.debeziumcdc_customers_append");
     }
 }
 
