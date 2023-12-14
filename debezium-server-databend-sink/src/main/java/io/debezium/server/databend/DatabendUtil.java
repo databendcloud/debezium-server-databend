@@ -29,6 +29,7 @@ import java.sql.DriverManager;
 import java.sql.*;
 import java.sql.SQLException;
 import java.sql.SQLType;
+import java.sql.Statement;
 import java.util.*;
 import java.util.LinkedHashMap;
 
@@ -194,7 +195,13 @@ public class DatabendUtil {
                 .columns(fields)) {
             String createTableSQL = createTableSQL(schemaName, sql.getSQL(), schema);
             LOGGER.warn("Creating table:\n{}", createTableSQL);
-            conn.createStatement().execute(createTableSQL);
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute(createTableSQL);
+                LOGGER.warn("Created table:\n{}", createTableSQL);
+            } catch (Exception e) {
+                LOGGER.warn("Failed to create table:\n{}", createTableSQL);
+                throw e;
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
