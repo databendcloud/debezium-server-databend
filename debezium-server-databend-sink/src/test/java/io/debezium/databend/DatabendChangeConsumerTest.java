@@ -135,7 +135,7 @@ public class DatabendChangeConsumerTest extends BaseDbTest {
     public void testTargetTableName() throws Exception {
         String destination = "server_name.databaseName.realTableName";
         String realTableName = consumer.mapDestination(destination);
-        Assertions.assertEquals("realTableName", realTableName);
+        Assertions.assertEquals("debeziumcdc_realTableName", realTableName);
     }
 
     @Test
