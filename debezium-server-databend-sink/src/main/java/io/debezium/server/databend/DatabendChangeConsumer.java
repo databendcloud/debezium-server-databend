@@ -212,6 +212,7 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
         long startTime = System.nanoTime();
         // consume list of events for each destination table
         for (Map.Entry<String, List<DatabendChangeEvent>> tableEvents : result.entrySet()) {
+            System.out.println("tableEvents.getKey() is :" + tableEvents.getKey());
             RelationalTable tbl = this.getDatabendTable(mapDestination(tableEvents.getKey()), tableEvents.getValue().get(0).schema());
             tableWriter.addToTable(tbl, tableEvents.getValue());
         }
@@ -231,12 +232,17 @@ public class DatabendChangeConsumer extends BaseChangeConsumer implements Debezi
     }
 
     public String mapDestination(String destination) {
+        System.out.println("destination is :" + destination);
         if (tableName.isPresent()) {
             return tablePrefix.orElse("") + tableName.orElse("");
         }
         final String getTableName = destination
-                .replaceAll(destinationRegexp.orElse(""), destinationRegexpReplace.orElse(""))
-                .replace(".", "_");
+                .replaceAll(destinationRegexp.orElse(""), destinationRegexpReplace.orElse(""));
+        if (getTableName.contains(".")) {
+            String[] parts = getTableName.split("\\.");
+            String tableName = parts[parts.length - 1];
+            return tablePrefix.orElse("") + tableName;
+        }
         return tablePrefix.orElse("") + getTableName;
     }
 }
