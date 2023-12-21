@@ -260,6 +260,9 @@ public class DatabendUtil {
     }
 
     public static boolean isSchemaChanged(DatabendChangeEvent.Schema schema) {
+        if (schema.keySchema().isNull()) {
+            return false;
+        }
         String schemaNameStr = schema.keySchema().get("name").textValue();
         if (schemaNameStr.toLowerCase().contains("schemachange")) {
             return true;
