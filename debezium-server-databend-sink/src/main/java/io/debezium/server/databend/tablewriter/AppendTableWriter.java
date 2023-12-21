@@ -11,7 +11,7 @@ package io.debezium.server.databend.tablewriter;
 import java.sql.Connection;
 
 public class AppendTableWriter extends BaseTableWriter {
-    public AppendTableWriter(Connection connection, String identifierQuoteCharacter) {
-        super(connection, identifierQuoteCharacter);
+    public AppendTableWriter(Connection connection, String identifierQuoteCharacter, boolean isSchemaEvolutionEnabled) {
+        super(connection, identifierQuoteCharacter, isSchemaEvolutionEnabled);
     }
 }

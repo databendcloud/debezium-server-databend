@@ -259,6 +259,14 @@ public class DatabendUtil {
         return decimalFields;
     }
 
+    public static boolean isSchemaChanged(DatabendChangeEvent.Schema schema) {
+        String schemaNameStr = schema.keySchema().get("name").textValue();
+        if (schemaNameStr.toLowerCase().contains("schemachange")) {
+            return true;
+        }
+        return false;
+    }
+
     private static String createTableSQL(String schemaName, String originalSQL, DatabendChangeEvent.Schema schema) {
         //"CREATE TABLE debeziumcdc_customers_append (__deleted boolean, id bigint, first_name varchar, __op varchar, __source_ts_ms bigint);";
         String[] parts = originalSQL.split("\\s", 4);
