@@ -214,8 +214,8 @@ public class DatabendUtil {
         Map<String, String> decimalFields = DatabendUtil.findDecimalFields(event.schema());
         System.out.println("valueSchema: " + event.schema.valueSchema());
         System.out.println("keySchema: " + event.schema.keySchema());
-        System.out.println("valueAsMap" + event.valueAsMap());
-        System.out.println("keyAsMap" + event.keyAsMap());
+        System.out.println("valueAsMap: " + event.valueAsMap());
+        System.out.println("keyAsMap: " + event.keyAsMap());
         int index = 1;
         for (String key : values.keySet()) {
             if (decimalFields.containsKey(key)) {

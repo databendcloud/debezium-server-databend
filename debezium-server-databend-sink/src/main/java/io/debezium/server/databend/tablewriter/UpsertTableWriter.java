@@ -37,9 +37,9 @@ public class UpsertTableWriter extends BaseTableWriter {
     protected static final Logger LOGGER = LoggerFactory.getLogger(UpsertTableWriter.class);
 
     public UpsertTableWriter(Connection connection, String identifierQuoteCharacter, boolean upsertKeepDeletes, boolean isSchemaEvolutionEnabled) {
-        super(connection, identifierQuoteCharacter,isSchemaEvolutionEnabled);
+        super(connection, identifierQuoteCharacter, isSchemaEvolutionEnabled);
         this.upsertKeepDeletes = upsertKeepDeletes;
-        appendTableWriter = new AppendTableWriter(connection, identifierQuoteCharacter,isSchemaEvolutionEnabled);
+        appendTableWriter = new AppendTableWriter(connection, identifierQuoteCharacter, isSchemaEvolutionEnabled);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class UpsertTableWriter extends BaseTableWriter {
 
         //handle schema changed events
         try {
-            schemaEvolution(schemaEvolutionEvents);
+            schemaEvolution(table, schemaEvolutionEvents);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

@@ -23,6 +23,8 @@ import java.sql.Connection;
 import java.sql.*;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static io.debezium.server.databend.DatabendUtil.addParametersToStatement;
 
@@ -63,13 +65,13 @@ public abstract class BaseTableWriter {
         }
         // handle schema evolution
         try {
-            schemaEvolution(schemaEvolutionEvents);
+            schemaEvolution(table, schemaEvolutionEvents);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
 
-    public void schemaEvolution(List<DatabendChangeEvent> events) {
+    public void schemaEvolution(RelationalTable table, List<DatabendChangeEvent> events) {
         for (DatabendChangeEvent event : events) {
             Map<String, Object> values = event.valueAsMap();
             for (Map.Entry<String, Object> entry : values.entrySet()) {
@@ -77,7 +79,7 @@ public abstract class BaseTableWriter {
                 Object value = entry.getValue();
                 System.out.println("Key: " + key + ", Value: " + value);
                 if (entry.getKey().contains("ddl")) {
-                    String ddlSql = entry.getValue().toString();
+                    String ddlSql = replaceFirstWordAfterTable(entry.getValue().toString(), table.databaseName + "." + table.tableName);
                     try (PreparedStatement statement = connection.prepareStatement(ddlSql)) {
                         System.out.println(ddlSql);
                         statement.execute(ddlSql);
@@ -89,5 +91,13 @@ public abstract class BaseTableWriter {
         }
     }
 
+    public static String replaceFirstWordAfterTable(String statement, String newTableName) {
+        if (statement == null || newTableName == null) {
+            return statement;
+        }
+        Pattern pattern = Pattern.compile("(?<=table )\\w+");
+        Matcher matcher = pattern.matcher(statement);
+        return matcher.replaceFirst(newTableName);
+    }
 }
 

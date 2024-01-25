@@ -24,7 +24,7 @@ public class RelationalTable {
     protected static final Logger LOGGER = LoggerFactory.getLogger(RelationalTable.class);
 
     public final String tableName;
-    private final String databaseName;
+    public final String databaseName;
     public final Map<String, DatabendRawType> columns = new HashMap<>();
     public final Map<String, Integer> primaryKeysMap = new HashMap<>();
     public final String primaryKey;
@@ -59,7 +59,7 @@ public class RelationalTable {
                     if (!primaryKey.isEmpty()) {
                         primaryKeysMap.put(primaryKey, 1);
                     }
-                    LOGGER.warn("Loaded Databend table {}.{} \nColumns:{} \nPK:{}",  schema, table, columns, primaryKeysMap);
+                    LOGGER.warn("Loaded Databend table {}.{} \nColumns:{} \nPK:{}", schema, table, columns, primaryKeysMap);
                 }
 
                 if (numTablesFound == 0) {
