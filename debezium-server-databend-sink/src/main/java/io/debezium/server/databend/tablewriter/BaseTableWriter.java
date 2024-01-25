@@ -75,11 +75,12 @@ public abstract class BaseTableWriter {
         for (DatabendChangeEvent event : events) {
             Map<String, Object> values = event.valueAsMap();
             for (Map.Entry<String, Object> entry : values.entrySet()) {
-                String key = entry.getKey();
-                Object value = entry.getValue();
-                System.out.println("Key: " + key + ", Value: " + value);
-                if (entry.getKey().contains("ddl")) {
-                    String ddlSql = replaceFirstWordAfterTable(entry.getValue().toString(), table.databaseName + "." + table.tableName);
+//                String key = entry.getKey();
+//                Object value = entry.getValue();
+//                System.out.println("Key: " + key + ", Value: " + value);
+                if (entry.getKey().contains("ddl") && entry.getValue().toString().toLowerCase().contains("alter table")) {
+                    String tableName = getFirstWordAfterAlterTable(entry.getValue().toString());
+                    String ddlSql = replaceFirstWordAfterTable(entry.getValue().toString(), table.databaseName + "." + tableName);
                     try (PreparedStatement statement = connection.prepareStatement(ddlSql)) {
                         System.out.println(ddlSql);
                         statement.execute(ddlSql);
@@ -98,6 +99,17 @@ public abstract class BaseTableWriter {
         Pattern pattern = Pattern.compile("(?<=table )\\w+");
         Matcher matcher = pattern.matcher(statement);
         return matcher.replaceFirst(newTableName);
+    }
+
+    public static String getFirstWordAfterAlterTable(String alterStatement) {
+        if (alterStatement == null) {
+            return null;
+        }
+        String[] parts = alterStatement.split(" ");
+        if (parts.length >= 3) {
+            return parts[2];
+        }
+        return null;
     }
 }
 

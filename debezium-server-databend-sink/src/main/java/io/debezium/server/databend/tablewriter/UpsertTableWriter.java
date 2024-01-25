@@ -72,7 +72,7 @@ public class UpsertTableWriter extends BaseTableWriter {
                     // here use soft delete
                     // if true delete, we can use this condition event.keyAsMap().containsKey(deleteColumn)
                     deleteEvents.add(event);
-                } else if (DatabendUtil.isSchemaChanged(event.schema())) {
+                } else if (DatabendUtil.isSchemaChanged(event.schema()) && isSchemaEvolutionEnabled) {
                     schemaEvolutionEvents.add(event);
                 }
             }

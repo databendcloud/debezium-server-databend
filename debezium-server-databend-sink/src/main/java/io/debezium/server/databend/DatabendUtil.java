@@ -264,7 +264,7 @@ public class DatabendUtil {
             return false;
         }
         String schemaNameStr = schema.keySchema().get("name").textValue();
-        if (schemaNameStr.toLowerCase().contains("schemachange")) {
+        if (schemaNameStr.toLowerCase().contains("schemachangekey")) {
             return true;
         }
         return false;
@@ -277,7 +277,6 @@ public class DatabendUtil {
 //
         String modifiedSQL = String.join(" ", parts);
 //        String modifiedSQL = originalSQL;
-        System.out.println("sjh" + modifiedSQL);
         // replace `decimal` with `decimal(precision,scale)` by handling schema.valueSchema()
         for (JsonNode jsonSchemaFieldNode : schema.valueSchema().get("fields")) {
             // if the field is decimal, replace it with decimal(precision,scale)
