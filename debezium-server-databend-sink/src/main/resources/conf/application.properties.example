@@ -38,11 +38,11 @@ debezium.source.database.history=io.debezium.relational.history.FileDatabaseHist
 debezium.source.database.history.file.filename=data/status.dat
 # do event flattening. unwrap message!
 # https://debezium.io/documentation/reference/1.2/configuration/event-flattening.html#extract-new-record-state-drop-tombstones
-debezium.transforms=unwrap,a
-debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
-debezium.transforms.a.type=org.apache.kafka.connect.transforms.TimestampConverter$Value
-debezium.transforms.a.target.type=string
-debezium.transforms.a.field=a
+#debezium.transforms=unwrap,a
+#debezium.transforms.unwrap.type=io.debezium.transforms.ExtractNewRecordState
+#debezium.transforms.a.type=org.apache.kafka.connect.transforms.TimestampConverter$Value
+#debezium.transforms.a.target.type=string
+#debezium.transforms.a.field=a
 # datetime format
 debezium.transforms.a.format=yyyy-MM-dd
 debezium.source.time.precision.mode=connect

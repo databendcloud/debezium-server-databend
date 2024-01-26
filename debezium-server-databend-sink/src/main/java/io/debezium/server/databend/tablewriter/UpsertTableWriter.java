@@ -36,10 +36,10 @@ public class UpsertTableWriter extends BaseTableWriter {
     final boolean upsertKeepDeletes;
     protected static final Logger LOGGER = LoggerFactory.getLogger(UpsertTableWriter.class);
 
-    public UpsertTableWriter(Connection connection, String identifierQuoteCharacter, boolean upsertKeepDeletes) {
-        super(connection, identifierQuoteCharacter);
+    public UpsertTableWriter(Connection connection, String identifierQuoteCharacter, boolean upsertKeepDeletes, boolean isSchemaEvolutionEnabled) {
+        super(connection, identifierQuoteCharacter, isSchemaEvolutionEnabled);
         this.upsertKeepDeletes = upsertKeepDeletes;
-        appendTableWriter = new AppendTableWriter(connection, identifierQuoteCharacter);
+        appendTableWriter = new AppendTableWriter(connection, identifierQuoteCharacter, isSchemaEvolutionEnabled);
     }
 
     @Override
@@ -56,6 +56,7 @@ public class UpsertTableWriter extends BaseTableWriter {
         final String upsertSql = table.preparedUpsertStatement(this.identifierQuoteCharacter);
         int inserts = 0;
         List<DatabendChangeEvent> deleteEvents = new ArrayList<>();
+        List<DatabendChangeEvent> schemaEvolutionEvents = new ArrayList<>();
 
         try (PreparedStatement statement = connection.prepareStatement(upsertSql)) {
             connection.setAutoCommit(false);
@@ -71,9 +72,12 @@ public class UpsertTableWriter extends BaseTableWriter {
                     // here use soft delete
                     // if true delete, we can use this condition event.keyAsMap().containsKey(deleteColumn)
                     deleteEvents.add(event);
+                } else if (DatabendUtil.isSchemaChanged(event.schema()) && isSchemaEvolutionEnabled) {
+                    schemaEvolutionEvents.add(event);
                 }
             }
 
+            // Each batch needs to have the same schemas, so get the buffered records out
             int[] batchResult = statement.executeBatch();
             inserts = Arrays.stream(batchResult).sum();
 
@@ -89,6 +93,12 @@ public class UpsertTableWriter extends BaseTableWriter {
             throw new RuntimeException(e.getMessage());
         }
 
+        //handle schema changed events
+        try {
+            schemaEvolution(table, schemaEvolutionEvents);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     public void deleteFromTable(final RelationalTable table, final List<DatabendChangeEvent> events) throws Exception {
@@ -103,7 +113,6 @@ public class UpsertTableWriter extends BaseTableWriter {
             }
         }
     }
-
 
     private String getPrimaryKeyValue(String primaryKey, Map<String, Object> parameters) throws Exception {
         String primaryValue = "";

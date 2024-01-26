@@ -28,7 +28,7 @@ public class DatabendChangeEvent {
     protected final String destination;
     protected final JsonNode value;
     protected final JsonNode key;
-    final Schema schema;
+    public final Schema schema;
 
     public DatabendChangeEvent(String destination, JsonNode value, JsonNode key, JsonNode valueSchema, JsonNode keySchema) {
         this.destination = destination;

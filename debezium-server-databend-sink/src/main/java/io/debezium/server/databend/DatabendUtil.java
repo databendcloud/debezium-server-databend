@@ -212,10 +212,6 @@ public class DatabendUtil {
         Map<String, Object> values = event.valueAsMap();
         //DatabendChangeEvent.Schema k = event.schema();
         Map<String, String> decimalFields = DatabendUtil.findDecimalFields(event.schema());
-        System.out.println("valueSchema: " + event.schema.valueSchema());
-        System.out.println("keySchema: " + event.schema.keySchema());
-        System.out.println("valueAsMap" + event.valueAsMap());
-        System.out.println("keyAsMap" + event.keyAsMap());
         int index = 1;
         for (String key : values.keySet()) {
             if (decimalFields.containsKey(key)) {
@@ -259,6 +255,17 @@ public class DatabendUtil {
         return decimalFields;
     }
 
+    public static boolean isSchemaChanged(DatabendChangeEvent.Schema schema) {
+        if (schema == null || schema.keySchema() == null || schema.keySchema().get("name") == null) {
+            return false;
+        }
+        String schemaNameStr = schema.keySchema().get("name").textValue();
+        if (schemaNameStr.toLowerCase().contains("schemachangekey")) {
+            return true;
+        }
+        return false;
+    }
+
     private static String createTableSQL(String schemaName, String originalSQL, DatabendChangeEvent.Schema schema) {
         //"CREATE TABLE debeziumcdc_customers_append (__deleted boolean, id bigint, first_name varchar, __op varchar, __source_ts_ms bigint);";
         String[] parts = originalSQL.split("\\s", 4);
@@ -266,7 +273,6 @@ public class DatabendUtil {
 //
         String modifiedSQL = String.join(" ", parts);
 //        String modifiedSQL = originalSQL;
-        System.out.println("sjh" + modifiedSQL);
         // replace `decimal` with `decimal(precision,scale)` by handling schema.valueSchema()
         for (JsonNode jsonSchemaFieldNode : schema.valueSchema().get("fields")) {
             // if the field is decimal, replace it with decimal(precision,scale)
